@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Visualizer</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-end;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+        }
+
+        svg {
+            border: 1px solid #ccc;
+            width: 100%;
+            height: 80vh;
+        }
+
+        .node {
+            fill: #1f77b4;
+            cursor: pointer;
+            stroke: #fff;
+            stroke-width: 1.5px;
+        }
+
+        .link {
+            stroke: #aaa;
+            stroke-width: 2px;
+        }
+
+        .node-label {
+            font-size: 12px;
+            text-anchor: middle;
+            pointer-events: none;
+            fill: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="button-container">
+        <button id="populateButton">Populate Graph with Random Nodes</button>
+        <button id="addNamedNodeButton">Add Named Node</button>
+        <button id="addLinkButton">Add Link Between Nodes</button>
+        <button id="clearGraphButton">Clear Graph</button>
+    </div>
+
+    <svg></svg>
+
+    <script>
+        let graph = {
+            nodes: [],
+            links: []
+        };
+
+        const svg = d3.select('svg');
+        let simulation;
+
+        // Create a simulation for the graph layout
+        function createSimulation() {
+            const width = svg.node().clientWidth;
+            const height = svg.node().clientHeight;
+
+            if (graph.nodes.length > 0) {
+                simulation = d3.forceSimulation(graph.nodes)
+                    .force('link', d3.forceLink(graph.links).id(d => d.id).distance(100))
+                    .force('charge', d3.forceManyBody().strength(-100))
+                    .force('center', d3.forceCenter(width / 2, height / 2).strength(0.01))
+                    .force('x', d3.forceX(width / 2).strength(0.02))
+                    .force('y', d3.forceY(height / 2).strength(0.02))
+                    .force('collision', d3.forceCollide().radius(30).strength(0.7))
+                    .force('boundary', boundaryForce(width, height));
+
+                simulation.alpha(1).restart();
+                simulation.alphaDecay(0.02);
+
+                simulation.on('tick', function() {
+                    svg.selectAll('.link')
+                        .attr('x1', d => isNaN(d.source.x) ? width/2 : d.source.x)
+                        .attr('y1', d => isNaN(d.source.y) ? height/2 : d.source.y)
+                        .attr('x2', d => isNaN(d.target.x) ? width/2 : d.target.x)
+                        .attr('y2', d => isNaN(d.target.y) ? height/2 : d.target.y);
+
+                    svg.selectAll('.node')
+                        .attr('cx', d => isNaN(d.x) ? width/2 : d.x)
+                        .attr('cy', d => isNaN(d.y) ? height/2 : d.y);
+
+                    svg.selectAll('.node-label')
+                        .attr('x', d => isNaN(d.x) ? width/2 : d.x)
+                        .attr('y', d => isNaN(d.y) ? height/2 : d.y + 5);
+                });
+            }
+        }
+
+        // Enhanced boundary force
+        function boundaryForce(width, height) {
+            return function(alpha) {
+                const margin = 50;
+                graph.nodes.forEach(function(d) {
+                    // Soft boundary with resistance
+                    const xResist = d.x < margin ? (margin - d.x) * 0.2 : 
+                                  (d.x > width - margin ? (width - margin - d.x) * 0.2 : 0);
+                    const yResist = d.y < margin ? (margin - d.y) * 0.2 : 
+                                  (d.y > height - margin ? (height - margin - d.y) * 0.2 : 0);
+                    
+                    d.x += xResist * alpha;
+                    d.y += yResist * alpha;
+                    
+                    // Hard boundary
+                    d.x = Math.max(20, Math.min(width - 20, d.x));
+                    d.y = Math.max(20, Math.min(height - 20, d.y));
+                });
+            };
+        }
+
+        // Function to update the graph visualization
+        function updateGraph() {
+            // Links
+            svg.selectAll('.link')
+                .data(graph.links)
+                .join('line')
+                .attr('class', 'link');
+
+            // Nodes
+            let node = svg.selectAll('.node')
+                .data(graph.nodes)
+                .join('circle')
+                .attr('class', 'node')
+                .attr('r', 20)
+                .call(d3.drag()
+                    .on('start', dragstart)
+                    .on('drag', dragged)
+                    .on('end', dragend))
+                .on('contextmenu', deleteNode);
+
+            node.append('title').text(d => d.id);
+
+            // Labels
+            svg.selectAll('.node-label')
+                .data(graph.nodes)
+                .join('text')
+                .attr('class', 'node-label')
+                .text(d => d.id);
+        }
+
+        // Dragging functions
+        function dragstart(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragend(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+
+        // Right-click to delete a node
+        function deleteNode(event, d) {
+            event.preventDefault();
+            const nodeId = d.id;
+
+            graph.nodes = graph.nodes.filter(node => node.id !== nodeId);
+            graph.links = graph.links.filter(link => link.source.id !== nodeId && link.target.id !== nodeId);
+
+            createSimulation();
+            updateGraph();
+        }
+
+        // Button to populate graph with random nodes and edges
+        document.getElementById('populateButton').addEventListener('click', function() {
+            const newNodes = 5;
+            const currentNodeCount = graph.nodes.length;
+            const width = svg.node().clientWidth;
+            const height = svg.node().clientHeight;
+
+            // Calculate positions in a circle around the center
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(width, height) * 0.3; // Use 30% of the smaller dimension
+
+            for (let i = 0; i < newNodes; i++) {
+                const angle = (i / newNodes) * Math.PI * 2;
+                graph.nodes.push({ 
+                    id: 'Node_' + (currentNodeCount + i),
+                    x: centerX + radius * Math.cos(angle),
+                    y: centerY + radius * Math.sin(angle)
+                });
+            }
+
+            if (graph.nodes.length > 1) {
+                for (let i = 0; i < newNodes; i++) {
+                    const source = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
+                    const target = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
+                    if (source !== target) {
+                        // Check if link already exists
+                        const linkExists = graph.links.some(link => 
+                            (link.source.id === source.id && link.target.id === target.id) ||
+                            (link.source.id === target.id && link.target.id === source.id));
+                        
+                        if (!linkExists) {
+                            graph.links.push({ source: source.id, target: target.id });
+                        }
+                    }
+                }
+            }
+
+            createSimulation();
+            updateGraph();
+        });
+
+        // Button to add a named node
+        document.getElementById('addNamedNodeButton').addEventListener('click', function() {
+            const nodeName = prompt('Enter the name for the new node:');
+            if (nodeName) {
+                const width = svg.node().clientWidth;
+                const height = svg.node().clientHeight;
+                
+                // Position new node in a random position within the visible area
+                graph.nodes.push({ 
+                    id: nodeName,
+                    x: 50 + Math.random() * (width - 100), // Keep within bounds
+                    y: 50 + Math.random() * (height - 100)
+                });
+
+                createSimulation();
+                updateGraph();
+            }
+        });
+
+        // Button to add a link between two nodes
+        document.getElementById('addLinkButton').addEventListener('click', function() {
+            const sourceNode = prompt('Enter the source node ID:');
+            const targetNode = prompt('Enter the target node ID:');
+
+            const source = graph.nodes.find(node => node.id === sourceNode);
+            const target = graph.nodes.find(node => node.id === targetNode);
+
+            if (source && target && source !== target) {
+                // Check if link already exists
+                const linkExists = graph.links.some(link => 
+                    (link.source.id === source.id && link.target.id === target.id) ||
+                    (link.source.id === target.id && link.target.id === source.id));
+                
+                if (!linkExists) {
+                    graph.links.push({ source: source.id, target: target.id });
+                    createSimulation();
+                    updateGraph();
+                } else {
+                    alert('Link already exists between these nodes!');
+                }
+            } else {
+                alert('Invalid nodes or same source and target!');
+            }
+        });
+
+        // Button to clear the graph
+        document.getElementById('clearGraphButton').addEventListener('click', function() {
+            graph.nodes = [];
+            graph.links = [];
+            svg.selectAll('*').remove();
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            createSimulation();
+        });
+
+        // Initialize
+        createSimulation();
+    </script>
+</body>
+</html>

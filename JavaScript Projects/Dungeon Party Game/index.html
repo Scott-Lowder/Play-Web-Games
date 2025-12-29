@@ -1,0 +1,1977 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Dungeon Party Game</title>
+    </head>
+    <body>
+    <canvas id="ctx" width="1480" height="840" style="border: 1px solid #000000;"></canvas>
+    <audio id="purchaseAudio">
+        <source src="gameSounds/pickupCoin (1).wav" type="audio/mpeg">
+    </audio>
+    <audio id="encounterDefeat">
+        <source src="gameSounds/explosion.wav" type="audio/mpeg">
+    </audio>
+    <audio id="attackSoundWarrior">
+        <source src="gameSounds/hitHurt.wav" type="audio/mpeg">
+    </audio>
+    <audio id="attackSoundRogue">
+        <source src="gameSounds/hitHurt2.wav" type="audio/mpeg">
+    </audio>
+    <audio id="attackSoundWizard">
+        <source src="gameSounds/hitHurt3.wav" type="audio/mpeg">
+    </audio>
+    <audio id="attackSoundMercenaries">
+        <source src="gameSounds/hitHurt4.wav" type="audio/mpeg">
+    </audio>
+    <audio id="attackSoundVoiders">
+        <source src="gameSounds/hitHurt5.wav" type="audio/mpeg">
+    </audio>
+    <audio id="sellingSound">
+        <source src="gameSounds/click.wav" type="audio/mpeg">
+    </audio>
+    <audio id="eliteEntrance">
+        <source src="gameSounds/eliteEntrance.wav" type="audio/mpeg">
+    </audio>
+    <audio id="shopMusic">
+        <source src="gameMusic/Pixel Music Pack/mp3/Pixel 1.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="newPartySlotSound">
+        <source src="gameSounds/powerUp.wav" type="audio/mpeg">
+    </audio>
+    <audio id="rewardMusic">
+        <source src="gameMusic/Pixel Music Pack/mp3/Pixel 8.mp3" type="audio/mpeg">
+    </audio>
+    <img id="hourGlass" src="gameItems/Hourglass.webp" hidden>
+    <img id="token" src="gameItems/Token.webp" hidden>
+    <img id="anvil" src="gameItems/Anvil.webp" hidden>
+    <img id="pocket_watch" src="gameItems/Pocket Mirror.webp" hidden>
+    <img id="dragon_pipe" src="gameItems/Dragon Pipe.webp" hidden>
+    <img id="mushroom" src="gameItems/Mushroom.webp" hidden>
+    <img id="snecko_ring" src="gameItems/Hissing Ring.webp" hidden>
+    <img id="dumbbell" src="gameItems/Dumbbell.webp" hidden>
+    <img id="ritual_dagger" src="gameItems/Ritual Dagger.webp" hidden>
+    <img id="glowing_egg" src="gameItems/Glowing Egg.webp" hidden>
+    <img id="horned_viper" src="gameItems/Horned Viper.webp" hidden>
+    <img id="shuriken" src="gameItems/Shuriken.webp" hidden>
+    <img id="magic_staff" src="gameItems/Magic Staff.webp" hidden>
+    <img id="iron_helm" src="gameItems/Iron Helm.webp" hidden>
+    <img id="scales" src="gameItems/Scales.webp" hidden>
+    <img id="prism" src="gameItems/Prism.webp" hidden>
+    <img id="bullseye" src="gameItems/Bullseye.webp" hidden>
+    <img id="sling" src="gameItems/Sling.webp" hidden>
+    <img id="yoyo" src="gameItems/Faerie Pact.webp" hidden>
+    <img id="banner" src="gameItems/Standard.webp" hidden>
+    <script>
+        const purchaseAudio = document.getElementById("purchaseAudio");
+        const encounterDefeat = document.getElementById("encounterDefeat");
+        const attackSoundWarrior = document.getElementById("attackSoundWarrior");
+        const attackSoundRogue = document.getElementById("attackSoundRogue");
+        const attackSoundWizard = document.getElementById("attackSoundWizard");
+        const attackSoundMercenaries = document.getElementById("attackSoundMercenaries");
+        const attackSoundVoiders = document.getElementById("attackSoundVoiders");
+        const sellingSound = document.getElementById("sellingSound");
+        const eliteEntrance = document.getElementById("eliteEntrance");
+        const newPartySlotSound = document.getElementById("newPartySlotSound");
+        const canvas = document.getElementById("ctx");
+        const ctx = canvas.getContext("2d");
+        const shopMusic = document.getElementById("shopMusic");
+        const rewardMusic = document.getElementById("rewardMusic");
+        const Hourglass = document.getElementById("hourGlass");
+        const Token = document.getElementById("token");
+        const Anvil = document.getElementById("anvil");
+        const Pocket_Watch = document.getElementById("pocket_watch");
+        const Dragon_Pipe = document.getElementById("dragon_pipe");
+        const Mushroom = document.getElementById("mushroom");
+        const Snecko_Ring = document.getElementById("snecko_ring");
+        const Dumbbell = document.getElementById("dumbbell");
+        const Ritual_Dagger = document.getElementById("ritual_dagger");
+        const Glowing_Egg = document.getElementById("glowing_egg");
+        const Horned_Viper = document.getElementById("horned_viper");
+        const Shuriken = document.getElementById("shuriken");
+        const Magic_Staff = document.getElementById("magic_staff");
+        const Iron_Helm = document.getElementById("iron_helm");
+        const Scales = document.getElementById("scales");
+        const Prism = document.getElementById("prism");
+        const Bullseye = document.getElementById("bullseye");
+        const Sling = document.getElementById("sling");
+        const Yoyo = document.getElementById("yoyo");
+        const Banner = document.getElementById("banner");
+
+        let shouldLoop = true;
+
+        ctx.font = "30px Arial";
+
+        let encounter_HPList = [100, 300, 600, 1000, 1500, 2600, 3200, 5000, 8000, 9000, 13000, 20000, 30000, 40000, 35000, 90000, 120000, 150000, 200000, 250000];
+        let encounterNum = 0;
+        let encounter_HP = encounter_HPList[encounterNum];
+
+        let partySize = 0;
+        let shopSelectionList = [];
+        let playerCoins = 3;
+        let partyGroupList = [];
+        let inShop = true;
+        let inCombat = false;
+        let gameTimer = 20;
+        let gameClock = 0;
+        let partyInfo = "";
+        let addpartyInfo = "";
+        let timeCut = 0;
+        let chronomancerSpeedUp = 0;
+        let assassinAuraEffect = false;
+        let bladeDancerInstaAttack = false;
+        let mageCounter = 0;
+        let numWarriorAttacks = 0;
+        let minerGains = 0;
+        let assassinLevel = 0;
+        let EncounterFont = "100px Arial";
+        let EncounterColor = "red";
+        let slimeWallHP = -1;
+        let createSlimeWall = false
+        let frozen = false;
+        let counter = 8;
+        let doom = false;
+        let overallDamage = 0;
+        let highestDamage = 0;
+        let totalCoins = 0;
+        let coinsForRound = 0;
+        let coinsShowing = false;
+        let timerColor = "black"
+        let rerollColor = "lightgreen"
+        let merchantGains = 0;
+        let coinCasterBonus = 0;
+        let coinCasterActive = false;
+        let coinCasterLevel = 1;
+        let coinCasterAura = "";
+        let partySizeMax = 5;
+        let voidersInParty = 0;
+        let numPartyMembersSold = 0;
+        let rerollCost = 2;
+        let eliteCoins = 0;
+        let newPartySlot = 4;
+        let newPartySlotIncrease = false;
+        let eliteMusicPlayed = false;
+        let eliteAudioCounter = 0;
+        let gameCompleteCounter = 0;
+        let gooseCounter = 0;
+        let ritualistDamageIncrease = 0;
+        let ritualistLevel = 0;
+        let mercenariesInParty = 0;
+        let ascendantLvl = 0;
+        let rerollCounter = 0;
+        let totalDamageDict = {}
+        let totalDamage = "";
+        let encounterX = 1000;
+        let warriorsInParty = 0;
+        let roguesInParty = 0;
+        let magesInParty = 0;
+        let paragonMult = 1;
+        let midasDiscount = 0;
+        let tempestNum = 11;
+        let inRewardRoom = false;
+        let rewardInventoryList = [];
+        let rewardChosenCounter = 0;
+        let hourGlassStatus = 0;
+        let anvilActive = false;
+        let pocketWatchBonus = 0;
+        let dragonPipeActive = false;
+        let sneckoRingActive = false;
+        let dumbbellActive = false;
+        let ritualDaggerActive = false;
+        let hornedViperBonus = 0;
+        let shurikenActive = false;
+        let shurikenBonus = 0;
+        let magicStaffActive = false;
+        let magicStaffBonus = 0;
+        let ironHelmActive = false;
+        let ironHelmBonus = 0;
+        let scalesActive = false;
+        let prismActive = false;
+        let bullseyeBonus = 0;
+        let slingActive = false;
+        let yoyoActive = false;
+        let gameTimerSlowDown = 0;
+        let glowingEggCheck = false;
+        let bannerBonus = 0;
+        let furyCasterLevel = 0;
+        let phonixUp = false;
+        let ritualistActive = false;
+
+        //party member costs
+        function getPartyMemberCost(memberName) {
+        const partyMemberCostDict = {
+            "Swordman": 1,
+            "Scout": 1,
+            "Wizard": 1,
+            "Berserker": 2,
+            "Thief": 2,
+            "Cryomancer": 2,
+            "Barbarian": 3,
+            "Chronomancer": 4,
+            "Assassin": 3,
+            "Jester": 2,
+            "Sorcerer": 3,
+            "Executioner": 3,
+            "Miner": 2,
+            "Vagabond": 4,
+            "Contractor": 4,
+            "Merchant": 3,
+            "Cultist": 2,
+            "Devourer": 2,
+            "Ritualist": 3,
+            "Ascendant": 4,
+            "Goose": 2,
+            "Paragon": 8,
+            "Midas": 8,
+            "Tempest": 8,
+        };
+        if (sneckoRingActive) {
+            return Math.floor(Math.random() * 5); 
+        }
+        return (partyMemberCostDict[memberName] || 0) - midasDiscount;
+        }
+
+        function fullEffect(a){
+            if (a.partyMember == "Swordman") return 12 * a.level + coinCasterBonus + ritualistDamageIncrease;
+            if (a.partyMember == "Berserker") return 14 * a.level + coinCasterBonus + ritualistDamageIncrease;
+            if (a.partyMember == "Scout") return 8 * a.level + coinCasterBonus + ritualistDamageIncrease + shurikenBonus;
+            if (a.partyMember == "Thief") return 20 * a.level + coinCasterBonus + ritualistDamageIncrease + shurikenBonus;
+            if (a.partyMember == "Jester") return 12 * a.level + coinCasterBonus + ritualistDamageIncrease + shurikenBonus;
+            if (a.partyMember == "Assassin") return 8 * a.level + coinCasterBonus + ritualistDamageIncrease + shurikenBonus;
+            if (a.partyMember == "Wizard") return 24 * a.level + coinCasterBonus + ritualistDamageIncrease + magicStaffBonus;
+            if (a.partyMember == "Cryomancer") return 34 * a.level + coinCasterBonus + ritualistDamageIncrease + shurikenBonus + magicStaffBonus;
+            if (a.partyMember == "Barbarian") return 15 * a.level + coinCasterBonus + ritualistDamageIncrease + magicStaffBonus;
+            if (a.partyMember == "Sorcerer") return 500 * a.level + coinCasterBonus + ritualistDamageIncrease + magicStaffBonus;
+            if (a.partyMember == "Chronomancer") return 30 * a.level + coinCasterBonus + ritualistDamageIncrease + magicStaffBonus;
+            if (a.partyMember == "Executioner") return 60 * a.level + coinCasterBonus + ritualistDamageIncrease;
+            if (a.partyMember == "Miner") return 14 * a.level + coinCasterBonus + ritualistDamageIncrease;
+            if (a.partyMember == "Vagabond") return playerCoins * a.level + coinCasterBonus + ritualistDamageIncrease;
+            if (a.partyMember == "Contractor") return 14 * a.level + coinCasterBonus + ritualistDamageIncrease;
+            if (a.partyMember == "Cultist") return 18 * a.level + coinCasterBonus + ritualistDamageIncrease;
+            if (a.partyMember == "Devourer") return 20 * a.level + coinCasterBonus + (20 * numPartyMembersSold) + ritualistDamageIncrease;
+            if (a.partyMember == "Ritualist") return 35 * a.level + coinCasterBonus + ritualistDamageIncrease;
+            if (a.partyMember == "Goose") return 1 * a.level + coinCasterBonus + ritualistDamageIncrease;
+            if (a.partyMember == "Merchant") return 14 * a.level + coinCasterBonus + ritualistDamageIncrease;
+            if (a.partyMember == "Ascendant") return 36 * a.level + coinCasterBonus + ritualistDamageIncrease;
+            if (a.partyMember == "Paragon") return 100 * a.level * paragonMult + coinCasterBonus + ritualistDamageIncrease;
+            if (a.partyMember == "Midas") return 100 * a.level + coinCasterBonus + ritualistDamageIncrease;
+            if (a.partyMember == "Tempest") return 100 * a.level + coinCasterBonus + ritualistDamageIncrease;
+            if (a.partyMember == "Golden Egg") return 0 * a.level + coinCasterBonus + ritualistDamageIncrease;
+        }
+
+        // Define an array of invisible rectangles (clickable areas)
+        const clickableAreas = [
+        { x: 490, y: 60, width: 90, height: 155, id: 'ItemSlot 1' },
+        { x: 730, y: 60, width: 90, height: 155, id: 'ItemSlot 2' },
+        { x: 970, y: 60, width: 90, height: 155, id: 'ItemSlot 3' },
+        { x: 680, y: 250, width: 210, height: 80, id: `ShopReroll`},
+        { x: 90, y: 225, width: 220, height: 30, id: `PartyMemberSlot 1`},
+        { x: 90, y: 275, width: 220, height: 30, id: `PartyMemberSlot 2`},
+        { x: 90, y: 325, width: 220, height: 30, id: `PartyMemberSlot 3`},
+        { x: 90, y: 375, width: 220, height: 30, id: `PartyMemberSlot 4`},
+        { x: 90, y: 425, width: 220, height: 30, id: `PartyMemberSlot 5`},
+        { x: 90, y: 475, width: 220, height: 30, id: `PartyMemberSlot 6`},
+        { x: 90, y: 525, width: 220, height: 30, id: `PartyMemberSlot 7`},
+        { x: 90, y: 575, width: 220, height: 30, id: `PartyMemberSlot 8`},
+        { x: 680, y: 650, width: 210, height: 80, id: `GoButton`},
+        { x: 90, y: 725, width: 210, height: 80, id: `RecapButton`},
+        { x: 90, y: 30, width: 50, height: 50, id: `RewardSlot 1`},
+        { x: 150, y: 30, width: 50, height: 50, id: `RewardSlot 2`},
+        { x: 210, y: 30, width: 50, height: 50, id: `RewardSlot 3`},
+        { x: 270, y: 30, width: 50, height: 50, id: `RewardSlot 4`},
+        { x: 330, y: 30, width: 50, height: 50, id: `RewardSlot 5`},
+        { x: 390, y: 30, width: 50, height: 50, id: `RewardSlot 6`},
+        ];
+
+        function isInsideRect(mouseX, mouseY, rect) {
+        return (
+            mouseX > rect.x &&
+            mouseX < rect.x + rect.width &&
+            mouseY > rect.y &&
+            mouseY < rect.y + rect.height
+            );
+        }
+
+        function drawDebugRectangles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (const area of clickableAreas) {
+                ctx.strokeStyle = 'gray';
+                ctx.strokeRect(area.x, area.y, area.width, area.height);
+            }
+        }
+
+        function startshopMusic() {
+            shouldLoop = true;
+            shopMusic.play();
+        }
+
+        function stopshopMusic() {
+            shouldLoop = false;
+            shopMusic.pause();
+            shopMusic.currentTime = 0;
+        }
+
+        shopMusic.addEventListener("ended", function () {
+            if (shouldLoop) {
+                shopMusic.currentTime = 0;
+                shopMusic.play();
+            }
+        });
+
+        function startrewardMusic() {
+            shouldLoop = true;
+            rewardMusic.play();
+        }
+
+        function stoprewardMusic() {
+            shouldLoop = false;
+            rewardMusic.pause();
+            rewardMusic.currentTime = 0;
+        }
+
+        rewardMusic.addEventListener("ended", function () {
+            if (shouldLoop) {
+                rewardMusic.currentTime = 0;
+                rewardMusic.play();
+            }
+        });
+
+        const gradient = ctx.createLinearGradient(50, 100, 450, 100);
+
+            // Add rainbow colors to the gradient
+            gradient.addColorStop(0, 'red');
+            gradient.addColorStop(0.17, 'orange');
+            gradient.addColorStop(0.51, 'green');
+            gradient.addColorStop(0.68, 'blue');
+            gradient.addColorStop(0.85, 'indigo');
+            gradient.addColorStop(1, 'violet');
+
+
+
+        //for font color for each class
+        function whatFontColor(partyMember) {
+            const fontColors = {
+            "Swordman": "orange",
+            "Berserker": "orange",
+            "Barbarian": "orange",
+            "Executioner": "orange",
+            "Scout": "red",
+            "Thief": "red",
+            "Jester": "red",
+            "Assassin": "red",
+            "Wizard": "blue",
+            "Cryomancer": "blue",
+            "Chronomancer": "blue",
+            "Sorcerer": "blue",
+            "Miner": "brown",
+            "Vagabond": "brown",
+            "Contractor": "brown",
+            "Cultist": "purple",
+            "Devourer": "purple",
+            "Ritualist": "purple",
+            "Goose": "gray",
+            "Merchant": "brown",
+            "Ascendant": "purple",
+            "Paragon": gradient,
+            "Midas": gradient,
+            "Tempest": gradient,
+            };
+            return fontColors[partyMember] || null;
+        }
+
+        furyCasterDict = {
+        "Swordman": 0,
+        "Berserker": 0,
+        "Barbarian": 0,
+        "Executioner": 0,
+        "Scout": 0,
+        "Thief": 0,
+        "Jester": 0,
+        "Assassin": 0,
+        "Wizard": 0,
+        "Cryomancer": 0,
+        "Chronomancer": 0,
+        "Sorcerer": 0,
+        "Miner": 0,
+        "Vagabond": 0,
+        "Contractor": 0,
+        "Cultist": 0,
+        "Devourer": 0,
+        "Ritualist": 0,
+        "Goose": 0,
+        "Merchant": 0,
+        "Ascendant": 0,
+        "Paragon": 0,
+        "Midas": 0,
+        "Tempest": 0,
+        };
+
+        function backgroundColorFinder(partyMember) {
+            const backColors = {
+            "Swordman": "#FFE5B4",
+            "Berserker": "#FFE5B4",
+            "Barbarian": "#FFE5B4",
+            "Executioner": "#FFE5B4",
+            "Scout": "#FFCCCC",
+            "Thief": "#FFCCCC",
+            "Jester": "#FFCCCC",
+            "Assassin": "#FFCCCC",
+            "Wizard": "#D6EAF8",
+            "Cryomancer": "#D6EAF8",
+            "Chronomancer": "#D6EAF8",
+            "Sorcerer": "#D6EAF8",
+            "Miner": "#EED9C4",
+            "Vagabond": "#EED9C4",
+            "Contractor": "#EED9C4",
+            "Cultist": "#E6E6FA",
+            "Devourer": "#E6E6FA",
+            "Ritualist": "#E6E6FA",
+            "Goose": "lightgray",
+            "Merchant": "#EED9C4",
+            "Ascendant": "#E6E6FA",
+            "Paragon": "#FFECEC",
+            "Midas": "#FFECEC",
+            "Tempest": "#FFECEC",
+        };
+    
+        return backColors[partyMember] || null;
+        }
+
+        function whatClass(partyMember) {
+        const memberClasses = {
+            "Swordman": "Warrior",
+            "Berserker": "Warrior",
+            "Executioner": "Warrior",
+            "Barbarian": "Warrior",
+            "Scout": "Rogue",
+            "Thief": "Rogue",
+            "Jester": "Rogue",
+            "Assassin": "Rogue",
+            "Wizard": "Mage",
+            "Cryomancer": "Mage",
+            "Chronomancer": "Mage",
+            "Sorcerer": "Mage",
+            "Miner": "Mercenary",
+            "Vagabond": "Mercenary",
+            "Contractor": "Mercenary",
+            "Merchant": "Mercenary",
+            "Cultist": "Voider",
+            "Devourer": "Voider",
+            "Ritualist": "Voider",
+            "Ascendant": "Voider",
+            "Goose": "Goose",
+            "Paragon": "Legendary",
+            "Midas": "Legendary",
+            "Tempest": "Legendary",
+        };
+    
+        return memberClasses[partyMember] || null;
+        }
+
+        function whatAttackSpeed(partyMember) {
+            const attackSpeeds = {
+            "Swordman": "Average",
+            "Berserker": "Average",
+            "Barbarian": "Very fast",
+            "Executioner": "Slow",
+            "Scout": "Fast",
+            "Thief": "Average",
+            "Jester": "Fast",
+            "Assassin": "Fast",
+            "Wizard": "Slow",
+            "Cryomancer": "Very slow",
+            "Chronomancer": "Very slow",
+            "Sorcerer": "Very very slow",
+            "Miner": "Slow",
+            "Vagabond": "Average",
+            "Contractor": "Slow",
+            "Cultist": "Fast",
+            "Devourer": "Average",
+            "Ritualist": "Average",
+            "Goose": "Fast",
+            "Merchant": "Average",
+            "Ascendant": "Average",
+            "Paragon": "Average",
+            "Midas": "Average",
+            "Tempest": "Average",
+        };
+    
+        return attackSpeeds[partyMember] || null;
+        }
+
+        function additionalInfo(partyMember) {
+            const additionalInfos = {
+            "Swordman": "",
+            "Berserker": "Increasing attack speed during the encounter.",
+            "Barbarian": "Increase attack speed of adjacent partymember(s) by 2X Barbarian's lvl.",
+            "Scout": "",
+            "Thief": "On critical hit, gain $1 coin.",
+            "Jester": "After any party member critical hit, attack again.",
+            "Assassin": "Rogues deal 1.5X times critical hit damage for each Assassin's lvl.",
+            "Wizard": "",
+            "Cryomancer": "On critical hit, increase timer.",
+            "Chronomancer": "Increases attack speed of entire party by Chronomancer's lvl.",
+            "Sorcerer": "Increases timer based on # of Mages in the party.",
+            "Executioner": "Increases damage based on # of Warrior attacks since last attack.",
+            "Miner": "Gain coins equal to half of Miner's lvl after each Encounter.",
+            "Vagabond": "Deals damage based on # of current coins.",
+            "Contractor": "Increase entire party damage by 3X Contractor's lvl after each Encounter.",
+            "Cultist": "Sells for coins equal to Cultist's lvl plus # of Voiders in party.",
+            "Devourer": "Increased damage based on # of party members sold this game.",
+            "Ritualist": "Selling partymembers increases entire party's damage by sold partymember's lvl.",
+            "Goose": "Will eventually transform into a Golden Egg?",
+            "Golden Egg": "Sells for coins equal to 6X Golden Egg's lvl.",
+            "Merchant": "Start each shop with free reroll's equal to number of Mercenaries in party + Merchant's lvl.",
+            "Ascendant": "New partymembers purchased have their level increased based on Ascendant's lvl.",
+            "Paragon": "Deals 8X damage if each of the 5 main classes are in party.",
+            "Midas": "All partymembers cost $1 coin less.",
+            "Tempest": "All partymembers have 2X critical hit chance.",
+            "Hourglass": "Hourglass - Start each encounter with 3 extra seconds.",
+            "Token": "Token - Gain coins equal to 2X current floor.",
+            "Anvil": "Anvil - After each encounter, level up a random partymember.",
+            "Pocket_Watch": "Pocket_Watch - Gain extra coins the closer the timer is to zero.",
+            "Dragon_Pipe": "Dragon_Pipe - After each encounter, gain extra coins equal to empty party slots.",
+            "Mushroom": "Mushroom - Level up a random partymember by the current floor number.",
+            "Snecko_Ring": "Snecko_Ring - All future shops have random costs.",
+            "Dumbbell": "Dumbbell - After each encounter, slightly increase your party’s damage.",
+            "Ritual_Dagger": "Ritual_Dagger - After removing a partymember, your next reroll is free.",
+            "Glowing_Egg": "Glowing_Egg - Add a random Legendary partymember to your party.",
+            "Horned_Viper": "Horned_Viper - All elite encounters have -15% value.",
+            "Shuriken": "Shuriken - Rogue’s deal increased damage for the encounter after any Rogue critical hit.",
+            "Magic_Staff": "Magic_Staff - Mage’s gain increasing damage during the encounter.",
+            "Iron_Helm": "Iron_Helm - Warrior’s “stun” on critical hits, temporarily slowing the timer.",
+            "Scales": "Scales - Mercenaries have a chance to level up twice when purchased.",
+            "Prism": "Prism - High damage to encounter periodically if each of the 5 main classes are in party.",
+            "Bullseye": "Bullseye - The partymember(s) in the middle of your party have 4x critical hit chance.",
+            "Sling": "Sling - The lowest level partymember(s) deal 2X damage.",
+            "Yoyo": "Yoyo - After a critical hit from the top or bottom-most partymember, the other attacks.",
+            "Banner": "Banner - The highest level partymember(s) give adjacent partymembers 3X critical hit chance."
+            };
+    
+            return additionalInfos[partyMember];
+            }
+
+        //randomly chooses a party member for shop item
+        function chooseRandomPartyMember() {
+            let random_Value;
+
+            if (encounterNum == 0) {
+                random_Value = Math.floor(Math.random() * 3) + 1;
+            } else if (encounterNum <= 4) {
+                random_Value = Math.floor(Math.random() * 12) + 1;
+            } else if (encounterNum <= 9) {
+                random_Value = Math.floor(Math.random() * 18) + 1;
+            } else if (encounterNum <= 14) {
+                random_Value = Math.floor(Math.random() * 22) + 1;
+            } else{
+                random_Value = Math.floor(Math.random() * 25) + 1;
+            }
+
+            const partyMembers = [
+                "Swordman", "Scout", "Wizard", 
+                "Miner", "Thief", "Berserker", "Miner", "Jester", "Cryomancer", "Cultist", "Devourer", "Goose", 
+                "Barbarian", "Ritualist", "Executioner", "Assassin", "Sorcerer", "Merchant", 
+                "Vagabond", "Chronomancer", "Contractor", "Ascendant", 
+                "Paragon", "Midas", "Tempest"
+            ];
+
+            return partyMembers[random_Value - 1];
+        }
+
+        function chooseRandomLegendaryPartyMember() {
+            let random_Value;
+            random_Value = Math.floor(Math.random() * 3) + 1;
+
+            const partyMembers = [
+                "Paragon", "Midas", "Tempest"
+            ];
+
+            return partyMembers[random_Value - 1];
+        }
+
+        function chooseRandomReward() {
+            const rewards = ["Banner", "Ritual_Dagger", "Yoyo", "Sling", "Bullseye", "Prism", "Scales", "Iron_Helm", "Magic_Staff", "Shuriken", "Hourglass", "Token", "Mushroom", "Snecko_Ring", "Pocket_Watch", "Dragon_Pipe", "Horned_Viper", "Glowing_Egg", "Anvil", "Dumbbell",];
+            let random_Value;
+
+            while (true) {
+                if (encounterNum < 11) {
+                    random_Value = Math.floor(Math.random() * 20);
+                }
+                else {
+                    random_Value = Math.floor(Math.random() * 14);
+                }
+
+                const selectedReward = rewards[random_Value];
+
+                if (shopSelectionList.every(shopItem => shopItem.partyMember !== selectedReward) &&
+                    rewardInventoryList.every(shopItem => shopItem.partyMember !== selectedReward)) {
+                    return selectedReward;
+                }
+            }
+        }
+
+        rewardImagesDict = {
+            "Hourglass": Hourglass,
+            "Token": Token,
+            "Anvil": Anvil,
+            "Pocket_Watch": Pocket_Watch,
+            "Dragon_Pipe": Dragon_Pipe,
+            "Mushroom": Mushroom,
+            "Snecko_Ring": Snecko_Ring,
+            "Dumbbell": Dumbbell,
+            "Ritual_Dagger": Ritual_Dagger,
+            "Glowing_Egg": Glowing_Egg,
+            "Horned_Viper": Horned_Viper,
+            "Shuriken": Shuriken,
+            "Magic_Staff": Magic_Staff,
+            "Iron_Helm": Iron_Helm,
+            "Scales": Scales,
+            "Prism": Prism,
+            "Bullseye": Bullseye,
+            "Sling": Sling,
+            "Yoyo": Yoyo,
+            "Banner": Banner,
+        }
+
+        //shop item creation
+        function itemCreation(xRect, yRect, xCost, yCost, xName, yName){
+            let shopItem = {}
+            shopItem.partyMember = chooseRandomPartyMember()
+            shopItem.coinCost = getPartyMemberCost(shopItem.partyMember);
+            shopItem.textColor = whatFontColor(shopItem.partyMember);
+            shopItem.class = whatClass(shopItem.partyMember);
+            shopItem.attackSpeed = whatAttackSpeed(shopItem.partyMember);
+            shopItem.addInfo = additionalInfo(shopItem.partyMember);
+            shopItem.backColor = backgroundColorFinder(shopItem.partyMember);
+            shopItem.font = "30px Arial";
+            shopItem.xRectangePosition = xRect;
+            shopItem.yRectanglePosition = yRect;
+            shopItem.xCostPosition = xCost;
+            shopItem.yCostPosition = yCost;
+            shopItem.xNamePosition = xName;
+            shopItem.yNamePosition = yName;
+            shopItem.level = (1 + ascendantLvl);
+            shopItem.purchased = false;
+            shopItem.xAttack = 0;
+            shopItem.reward = false;
+            shopItem.fullEffect = 0;
+            shopItem.criticalHit = "";
+            shopSelectionList.push(shopItem);
+        }
+
+        function glowingEggItemCreation(){
+            let shopItem = {}
+            shopItem.partyMember = chooseRandomLegendaryPartyMember()
+            shopItem.coinCost = getPartyMemberCost(shopItem.partyMember);
+            shopItem.textColor = whatFontColor(shopItem.partyMember);
+            shopItem.class = whatClass(shopItem.partyMember);
+            shopItem.attackSpeed = whatAttackSpeed(shopItem.partyMember);
+            shopItem.addInfo = additionalInfo(shopItem.partyMember);
+            shopItem.font = "30px Arial";
+            shopItem.level = (1 + ascendantLvl);
+            shopItem.purchased = false;
+            shopItem.xAttack = 0;
+            shopItem.reward = false;
+            shopItem.fullEffect = 0;
+            shopItem.criticalHit = "";
+            partyGroupList.push(shopItem);
+        }
+
+        function rewardCreation(xRect, yRect, xCost, yCost, xName, yName){
+            let shopItem = {}
+            shopItem.partyMember = chooseRandomReward();
+            shopItem.rewardImage = rewardImagesDict[shopItem.partyMember]
+            shopItem.coinCost = 0;
+            shopItem.textColor = "white";
+            shopItem.class = "";
+            shopItem.attackSpeed = "";
+            shopItem.addInfo = additionalInfo(shopItem.partyMember);
+            shopItem.font = "30px Arial";
+            shopItem.xRectangePosition = xRect;
+            shopItem.yRectanglePosition = yRect;
+            shopItem.xCostPosition = xCost;
+            shopItem.yCostPosition = yCost;
+            shopItem.xNamePosition = xName;
+            shopItem.yNamePosition = yName;
+            shopItem.purchased = false;
+            shopItem.reward = true;
+            shopSelectionList.push(shopItem);
+        }
+
+        function rewardUpdateStatuses(reward){
+            if (reward.partyMember == "Hourglass"){
+                hourGlassStatus = 3;
+            }
+            if (reward.partyMember == "Token"){
+                playerCoins += (encounterNum * 2);
+            }
+            if (reward.partyMember == "Anvil"){
+                anvilActive = true;
+            }
+            if (reward.partyMember == "Pocket_Watch"){
+                pocketWatchBonus = 5;
+            }
+            if (reward.partyMember == "Dragon_Pipe"){
+                dragonPipeActive = true;
+            }
+            if (reward.partyMember == "Mushroom"){
+                tempMember = partyGroupList[Math.floor(Math.random() * partyGroupList.length)]
+                    tempMember.level += encounterNum + 1;
+                    tempMember.font = "bold 30px Arial";
+                    setTimeout(() => tempMember.font = "30px Arial", 600);
+            }
+            if (reward.partyMember == "Snecko_Ring"){
+                sneckoRingActive = true;
+            }
+            if (reward.partyMember == "Dumbbell"){
+                dumbbellActive = true;
+            }
+            if (reward.partyMember == "Ritual_Dagger"){
+                ritualDaggerActive = true;
+            }
+            if (reward.partyMember == "Glowing_Egg"){
+                glowingEggItemCreation();
+                glowingEggCheck = true;
+            }
+            if (reward.partyMember == "Horned_Viper"){
+                hornedViperBonus = 0.15;
+            }
+            if (reward.partyMember == "Shuriken"){
+                shurikenActive = true;
+            }
+            if (reward.partyMember == "Magic_Staff"){
+                magicStaffActive = true;
+            }
+            if (reward.partyMember == "Iron_Helm"){
+                ironHelmActive = true;
+            }
+            if (reward.partyMember == "Scales"){
+                scalesActive = true;
+            }
+            if (reward.partyMember == "Prism"){
+                prismActive = true;
+            }
+            if (reward.partyMember == "Bullseye"){
+                bullseyeBonus = 4;
+            }
+            if (reward.partyMember == "Prism"){
+                slingActive = true;
+            }
+            if (reward.partyMember == "Yoyo"){
+                yoyoActive = true;
+            }
+            if (reward.partyMember == "Banner"){
+                bannerBonus = 3;
+            }
+        }
+
+        //refreshes shop -> function gives x, y positions for everything
+        function refreshShop(){
+            itemCreation(500, 100, 515, 140, 500, 200);
+            itemCreation(740, 100, 755, 140, 740, 200);
+            itemCreation(980, 100, 995, 140, 980, 200);
+
+        }
+
+        function refreshRewards(){
+            rewardCreation(500, 100, 515, 140, 500, 200);
+            rewardCreation(740, 100, 755, 140, 740, 200);
+            rewardCreation(980, 100, 995, 140, 980, 200);
+
+        }
+
+        function handleMouseMove(event) {
+            const rectBounds = canvas.getBoundingClientRect();
+            const mouseX = event.clientX - rectBounds.left;
+            const mouseY = event.clientY - rectBounds.top;
+
+            let areaFound = false;
+
+            for (const area of clickableAreas){
+                if (isInsideRect(mouseX, mouseY, area) && (inShop == true || inRewardRoom == true)){
+                    if (area.id == "ItemSlot 1" && shopSelectionList[0]){
+                        partyInfo = `${shopSelectionList[0].partyMember} (${shopSelectionList[0].class}) - ${shopSelectionList[0].attackSpeed} attack speed dealing ${fullEffect(shopSelectionList[0])} damage.`;
+                        addpartyInfo = `${shopSelectionList[0].addInfo}`;
+                        areaFound = true;
+                        break;
+                    }
+                    if (area.id == "ItemSlot 2" && shopSelectionList[1]){
+                        partyInfo = `${shopSelectionList[1].partyMember} (${shopSelectionList[1].class}) - ${shopSelectionList[1].attackSpeed} attack speed dealing ${fullEffect(shopSelectionList[1])} damage.`;
+                        addpartyInfo = `${shopSelectionList[1].addInfo}`;
+                        areaFound = true;
+                        break;
+                    }
+                    if (area.id == "ItemSlot 3" && shopSelectionList[2]){
+                        partyInfo = `${shopSelectionList[2].partyMember} (${shopSelectionList[2].class}) - ${shopSelectionList[2].attackSpeed} attack speed dealing ${fullEffect(shopSelectionList[2])} damage.`;
+                        addpartyInfo = `${shopSelectionList[2].addInfo}`;
+                        areaFound = true;
+                        break;
+                    }
+                    if (area.id == "PartyMemberSlot 1" && partyGroupList[0]){
+                        partyInfo = `${partyGroupList[0].partyMember} (${partyGroupList[0].class}) - ${partyGroupList[0].attackSpeed} attack speed dealing ${fullEffect(partyGroupList[0])} damage.`;
+                        addpartyInfo = `${partyGroupList[0].addInfo}`;
+                        areaFound = true;
+                        break;
+                    }
+                    if (area.id == "PartyMemberSlot 2" && partyGroupList[1]){
+                        partyInfo = `${partyGroupList[1].partyMember} (${partyGroupList[1].class}) - ${partyGroupList[1].attackSpeed} attack speed dealing ${fullEffect(partyGroupList[1])} damage.`;
+                        addpartyInfo = `${partyGroupList[1].addInfo}`;
+                        areaFound = true;
+                        break;
+                    }
+                    if (area.id == "PartyMemberSlot 3" && partyGroupList[2]){
+                        partyInfo = `${partyGroupList[2].partyMember} (${partyGroupList[2].class}) - ${partyGroupList[2].attackSpeed} attack speed dealing ${fullEffect(partyGroupList[2])} damage.`;
+                        addpartyInfo = `${partyGroupList[2].addInfo}`;
+                        areaFound = true;
+                        break;
+                    }
+                    if (area.id == "PartyMemberSlot 4" && partyGroupList[3]){
+                        partyInfo = `${partyGroupList[3].partyMember} (${partyGroupList[3].class}) - ${partyGroupList[3].attackSpeed} attack speed dealing ${fullEffect(partyGroupList[3])} damage.`;
+                        addpartyInfo = `${partyGroupList[3].addInfo}`;
+                        areaFound = true;
+                        break;
+                    }
+                    if (area.id == "PartyMemberSlot 5" && partyGroupList[4]){
+                        partyInfo = `${partyGroupList[4].partyMember} (${partyGroupList[4].class}) - ${partyGroupList[4].attackSpeed} attack speed dealing ${fullEffect(partyGroupList[4])} damage.`;
+                        addpartyInfo = `${partyGroupList[4].addInfo}`;
+                        areaFound = true;
+                        break;
+                    }
+                    if (area.id == "PartyMemberSlot 6" && partyGroupList[5]){
+                        partyInfo = `${partyGroupList[5].partyMember} (${partyGroupList[5].class}) - ${partyGroupList[5].attackSpeed} attack speed dealing ${fullEffect(partyGroupList[5])} damage.`;
+                        addpartyInfo = `${partyGroupList[5].addInfo}`;
+                        areaFound = true;
+                        break;
+                    }
+                    if (area.id == "PartyMemberSlot 7" && partyGroupList[6]){
+                        partyInfo = `${partyGroupList[6].partyMember} (${partyGroupList[6].class}) - ${partyGroupList[6].attackSpeed} attack speed dealing ${fullEffect(partyGroupList[6])} damage.`;
+                        addpartyInfo = `${partyGroupList[6].addInfo}`;
+                        areaFound = true;
+                        break;
+                    }
+                    if (area.id == "PartyMemberSlot 8" && partyGroupList[7]){
+                        partyInfo = `${partyGroupList[7].partyMember} (${partyGroupList[7].class}) - ${partyGroupList[7].attackSpeed} attack speed dealing ${fullEffect(partyGroupList[7])} damage.`;
+                        addpartyInfo = `${partyGroupList[7].addInfo}`;
+                        areaFound = true;
+                        break;
+                    }
+                    
+                    if (area.id == "RecapButton"){
+                        recapOn = true;
+                        areaFound = true;
+                    }
+                    if (area.id == "RewardSlot 1" && rewardInventoryList[0]){
+                        addpartyInfo = `${rewardInventoryList[0].addInfo}`;
+                        areaFound = true;
+                        break;
+                    }
+                    if (area.id == "RewardSlot 2" && rewardInventoryList[1]){
+                        addpartyInfo = `${rewardInventoryList[1].addInfo}`;
+                        areaFound = true;
+                        break;
+                    }
+                    if (area.id == "RewardSlot 3" && rewardInventoryList[2]){
+                        addpartyInfo = `${rewardInventoryList[2].addInfo}`;
+                        areaFound = true;
+                        break;
+                    }
+                    if (area.id == "RewardSlot 4" && rewardInventoryList[3]){
+                        addpartyInfo = `${rewardInventoryList[3].addInfo}`;
+                        areaFound = true;
+                        break;
+                    }
+                    if (area.id == "RewardSlot 5" && rewardInventoryList[4]){
+                        addpartyInfo = `${rewardInventoryList[4].addInfo}`;
+                        areaFound = true;
+                        break;
+                    }
+                    if (area.id == "RewardSlot 6" && rewardInventoryList[5]){
+                        addpartyInfo = `${rewardInventoryList[5].addInfo}`;
+                        areaFound = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!areaFound) {
+                partyInfo = "";
+                addpartyInfo = "";
+                recapOn = false;
+            }
+        }
+
+        function inPartyAlready(a){
+            for (var key in partyGroupList){
+                if(a.partyMember == partyGroupList[key].partyMember){
+                    partyGroupList[key].level += 1;
+                    partyGroupList[key].font = "bold 30px Arial";
+                    setTimeout(() => partyGroupList[key].font = "30px Arial", 200);
+                    if (scalesActive == true && (a.partyMember == "Contracter" || a.partyMember == "Miner" || a.partyMember == "Vagabond" || a.partyMember == "Merchant")){
+                        randomBit = Math.floor(Math.random() * 2);
+                        if (randomBit == 1){
+                            partyGroupList[key].level += 1;
+                        }
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function handleMouseClick(event) {
+            const rectBounds = canvas.getBoundingClientRect();
+            const mouseX = event.clientX - rectBounds.left;
+            const mouseY = event.clientY - rectBounds.top;
+
+        function removingAndCultist(a){
+            if (a.partyMember == "Cultist"){
+                playerCoins += (a.level + (voidersInParty - 1));
+            }
+            if (a.partyMember == "Cultist" || a.partyMember == "Ritualist" || a.partyMember == "Devourer" || a.partyMember == "Ascendant"){
+                voidersInParty -= 1;
+            }
+            if (a.partyMember == "Miner" || a.partyMember == "Contractor" || a.partyMember == "Merchant" || a.partyMember == "Vagabond"){
+                mercenariesInParty -= 1;
+            }
+            if (a.partyMember == "Swordman" || a.partyMember == "Berserker" || a.partyMember == "Executioner" || a.partyMember == "Barbarian"){
+                warriorsInParty -= 1;
+            }
+            if (a.partyMember == "Scout" || a.partyMember == "Jester" || a.partyMember == "Thief" || a.partyMember == "Assassin"){
+                roguesInParty -= 1;
+            }
+            if (a.partyMember == "Wizard" || a.partyMember == "Sorcerer" || a.partyMember == "Chronomancer" || a.partyMember == "Cryomancer"){
+                magesInParty -= 1;
+            }
+            if (a.partyMember == "Goose" || a.partyMember == "Golden Egg"){
+                gooseCounter = 0;
+            }
+            if (a.partyMember == "Golden Egg"){
+                playerCoins += a.level * 6;
+            }
+            if (a.partyMember == "Ritualist"){
+                ritualistActive = false;
+            }
+            if (a.partyMember == "Midas"){
+                midasDiscount = 0;
+            }
+
+            if (ritualistActive = true) {
+                ritualistDamageIncrease += a.level
+            }
+            sellingSound.play();
+            numPartyMembersSold += 1;
+            if (ritualDaggerActive){
+                rerollCounter += 1;
+            }
+        }
+
+        function addingVoiders(a){
+            if (a.partyMember == "Cultist" || a.partyMember == "Ritualist" || a.partyMember == "Devourer" || a.partyMember == "Ascendant"){
+                voidersInParty += 1;
+            }
+            if (a.partyMember == "Miner" || a.partyMember == "Contractor" || a.partyMember == "Merchant" || a.partyMember == "Merchant"){
+                mercenariesInParty += 1;
+            }
+            if (a.partyMember == "Swordman" || a.partyMember == "Berserker" || a.partyMember == "Executioner" || a.partyMember == "Barbarian"){
+                warriorsInParty += 1;
+            }
+            if (a.partyMember == "Scout" || a.partyMember == "Jester" || a.partyMember == "Thief" || a.partyMember == "Assassin"){
+                roguesInParty += 1;
+            }
+            if (a.partyMember == "Wizard" || a.partyMember == "Sorcerer" || a.partyMember == "Chronomancer" || a.partyMember == "Cryomancer"){
+                magesInParty += 1;
+            }
+            if (a.partyMember == "Ascendant"){
+                ascendantLvl += 1;
+            }
+            if (a.partyMember == "Ritualist"){
+                ritualistActive = true;
+            }
+            if (a.partyMember == "Midas"){
+                midasDiscount = 1;
+            }
+        }
+
+        for (const area of clickableAreas) {
+            if (isInsideRect(mouseX, mouseY, area)) {
+                if (area.id == "ItemSlot 1" && playerCoins >= shopSelectionList[0].coinCost && shopSelectionList[0].purchased == false){
+                    if (inPartyAlready(shopSelectionList[0])){
+                        if (shopSelectionList[0].partyMember == "Ascendant"){
+                            ascendantLvl += 1;
+                        }
+                        purchaseAudio.play();
+                        shopSelectionList[0].purchased = true;
+                        playerCoins -= shopSelectionList[0].coinCost;
+                    }
+                    else if (partySize < partySizeMax) {
+                        purchaseAudio.play();
+                        addingVoiders(shopSelectionList[0]);
+                        shopSelectionList[0].purchased = true;
+                        if (shopSelectionList[0].reward == true){
+                            rewardChosenCounter += 1;
+                            rewardUpdateStatuses(shopSelectionList[0]);
+                            rewardInventoryList.push(shopSelectionList[0])
+                        }
+                        else {
+                            playerCoins -= shopSelectionList[0].coinCost;
+                            partySize += 1;
+                            partyGroupList.push(shopSelectionList[0])
+                        }
+                    }  
+                }
+                if (area.id == "ItemSlot 2" && playerCoins >= shopSelectionList[1].coinCost && shopSelectionList[1].purchased == false){
+                    if (inPartyAlready(shopSelectionList[1])){
+                        if (shopSelectionList[1].partyMember == "Ascendant"){
+                            ascendantLvl += 1;
+                        }
+                        purchaseAudio.play();
+                        shopSelectionList[1].purchased = true;
+                        playerCoins -= shopSelectionList[1].coinCost;
+                    }
+                    else if (partySize < partySizeMax) {
+                        purchaseAudio.play();
+                        addingVoiders(shopSelectionList[1]);
+                        shopSelectionList[1].purchased = true;
+                        if (shopSelectionList[1].reward == true){
+                            rewardChosenCounter += 1;
+                            rewardUpdateStatuses(shopSelectionList[1]);
+                            rewardInventoryList.push(shopSelectionList[1])
+                        }
+                        else {
+                            playerCoins -= shopSelectionList[1].coinCost;
+                            partySize += 1;
+                            partyGroupList.push(shopSelectionList[1])
+                        }
+                    }  
+                }
+
+                if (area.id == "ItemSlot 3" && playerCoins >= shopSelectionList[2].coinCost && shopSelectionList[2].purchased == false){
+                    if (inPartyAlready(shopSelectionList[2])){
+                        if (shopSelectionList[2].partyMember == "Ascendant"){
+                            ascendantLvl += 1;
+                        }
+                        purchaseAudio.play();
+                        shopSelectionList[2].purchased = true;
+                        playerCoins -= shopSelectionList[2].coinCost;
+                    }
+                    else if (partySize < partySizeMax) {
+                        purchaseAudio.play();
+                        addingVoiders(shopSelectionList[2]);
+                        shopSelectionList[2].purchased = true;
+                        if (shopSelectionList[2].reward == true){
+                            rewardChosenCounter += 1;
+                            rewardUpdateStatuses(shopSelectionList[2]);
+                            rewardInventoryList.push(shopSelectionList[2])
+                        }
+                        else {
+                            playerCoins -= shopSelectionList[2].coinCost;
+                            partySize += 1;
+                            partyGroupList.push(shopSelectionList[2])
+                        }
+                    }  
+                }
+
+                if (area.id == "PartyMemberSlot 1") {
+                    removingAndCultist(partyGroupList[0]);
+                    partyGroupList.splice(0, 1);
+                    partySize = partyGroupList.length;
+                }
+
+                if (area.id == "PartyMemberSlot 2") {
+                    removingAndCultist(partyGroupList[1]);
+                    partyGroupList.splice(1, 1);
+                    partySize = partyGroupList.length;
+                }
+
+                if (area.id == "PartyMemberSlot 3") {
+                    removingAndCultist(partyGroupList[2]);
+                    partyGroupList.splice(2, 1);
+                    partySize = partyGroupList.length;
+                }
+
+                if (area.id == "PartyMemberSlot 4") {
+                    removingAndCultist(partyGroupList[3]);
+                    partyGroupList.splice(3, 1);
+                    partySize = partyGroupList.length;
+                }
+
+                if (area.id == "PartyMemberSlot 5") {
+                    removingAndCultist(partyGroupList[4]);
+                    partyGroupList.splice(4, 1);
+                    partySize = partyGroupList.length;
+                }
+
+                if (area.id == "PartyMemberSlot 6") {
+                    removingAndCultist(partyGroupList[5]);
+                    partyGroupList.splice(5, 1);
+                    partySize = partyGroupList.length;
+                }
+                if (area.id == "PartyMemberSlot 7") {
+                    removingAndCultist(partyGroupList[6]);
+                    partyGroupList.splice(6, 1);
+                    partySize = partyGroupList.length;
+                }
+                if (area.id == "PartyMemberSlot 8") {
+                    removingAndCultist(partyGroupList[7]);
+                    partyGroupList.splice(7, 1);
+                    partySize = partyGroupList.length;
+                }
+
+                if (area.id == "ShopReroll" && playerCoins >= 2){
+                    purchaseAudio.play();
+                    playerCoins -= rerollCost;
+                    rerollCounter -= 1;
+                    shopSelectionList = [];
+                    refreshShop();
+                }
+
+                if (area.id == "GoButton" && partySize >= 1){
+                    inShop = false;
+                    totalDamageDict = {}
+                    inCombat = true;
+                    tempestNum = 11;
+                }
+                return;
+            }
+        }
+    }
+
+        canvas.addEventListener('click', handleMouseClick);
+        canvas.addEventListener('mousemove', handleMouseMove);
+
+        setInterval(update, 50);
+
+        refreshShop()
+
+        function getAdjacentToFuryCaster() {
+            furyCasterIndex = partyGroupList.findIndex(member => member.partyMember == "Barbarian");
+
+            if (furyCasterIndex === -1) {
+                return [];
+            }
+
+            adjacentIndexes = [];
+            if (furyCasterIndex > 0) {
+                adjacentIndexes.push(furyCasterIndex - 1);
+            }
+            if (furyCasterIndex < partyGroupList.length - 1) {
+                adjacentIndexes.push(furyCasterIndex + 1);
+            }
+
+
+            adjacentIndexes.forEach(index => {
+                memberName = partyGroupList[index].partyMember;
+                if (furyCasterDict.hasOwnProperty(memberName)) {
+                    furyCasterDict[memberName] = furyCasterLevel;
+                }
+            });
+
+        }
+
+        function getMiddleElement(arr) {
+            len = arr.length;
+            mid = Math.floor(len / 2);
+            return len % 2 === 0 ? [mid - 1, mid] : [mid];
+        }
+
+        function getAdjacentHighestLevelIndexes() {
+            maxLevel = Math.max(...partyGroupList.map(member => member.level));
+            highestIndexes = partyGroupList
+            .map((member, index) => (member.level === maxLevel ? index : -1))
+            .filter(index => index !== -1);
+
+            adjacentIndexes = new Set();
+            highestIndexes.forEach(index => {
+            if (index > 0) adjacentIndexes.add(index - 1);
+            if (index < partyGroupList.length - 1) adjacentIndexes.add(index + 1);
+            });
+            return [...adjacentIndexes];
+        }
+
+        function criticalHit(a){
+            if (getMiddleElement(partyGroupList).includes(partyGroupList.indexOf(a)) && getAdjacentHighestLevelIndexes().includes(partyGroupList.indexOf(a))) {
+                random_Value = Math.floor(Math.random() * (tempestNum - bullseyeBonus - bannerBonus - 1)) + 1;
+            }
+            else if (getMiddleElement(partyGroupList).includes(partyGroupList.indexOf(a))){
+                random_Value = Math.floor(Math.random() * (tempestNum - bullseyeBonus - 1)) + 1;
+            }
+            else if (getAdjacentHighestLevelIndexes().includes(partyGroupList.indexOf(a))){
+                random_Value = Math.floor(Math.random() * (tempestNum - bannerBonus - 1)) + 1;
+            }
+            else {
+                random_Value = Math.floor(Math.random() * (tempestNum - 1)) + 1;
+            }
+            if (random_Value == 1){
+                a.criticalHit = "CRIT !"
+                bladeDancerInstaAttack = true;
+                if (a.partyMember == "Thief"){
+                    playerCoins += 1;
+                    totalCoins += 1;
+                }
+                if (a.partyMember == "Cryomancer"){
+                    gameTimer += 1;
+                    timerColor = "blue";
+                    setTimeout(() => timerColor = "black", 2000);
+                }
+                if (ironHelmActive == true && (a.partyMember == "Swordman" || a.partyMember == "Berserker" || a.partyMember == "Executioner" || a.partyMember == "Barbarian")){
+                    if (ironHelmBonus == 0){
+                        ironHelmBonus = 5;
+                        setTimeout(() => ironHelmBonus = 0, 500);
+                    }
+                }
+                setTimeout(() => a.criticalHit = "", 1000);
+                if (shurikenActive == true && (a.partyMember == "Scout" || a.partyMember == "Thief" || a.partyMember == "Assassin" || a.partyMember == "Jester")) {
+                    shurikenBonus += Math.floor(encounterNum / 2);
+                }
+                if (assassinAuraEffect == true && (a.partyMember == "Scout" || a.partyMember == "Thief" || a.partyMember == "Assassin" || a.partyMember == "Jester")) {
+                    return 4 + Math.floor((assassinLevel * 1.5));
+                }
+                return 4;
+            }
+            else {
+                return 1;
+            }
+        }
+
+        function checkBigHit(damageAmount) {
+            if (damageAmount >= encounter_HPList[encounterNum] * 0.05){
+                EncounterFont = "bold 100px Arial";
+                setTimeout(() => EncounterFont = "100px Arial", 300);
+                encounterX += 30;
+                setTimeout(() => encounterX -= 30, 50);
+                if (damageAmount > highestDamage){
+                    highestDamage = damageAmount;
+                }
+            }
+        }
+
+        function isLowestLevel(a) {
+            if (partyGroupList.length === 0) return false;
+            minLevel = Math.min(...partyGroupList.map(m => m.level));
+            return a.level === minLevel;
+        }
+
+        function firstOrLast(a) {
+            index = partyGroupList.indexOf(a);
+            if (index === 0) return "first";
+            if (index === partyGroupList.length - 1) return "last";
+            return false;
+        }
+
+        function applyDamage(a) {
+            criticalHitValue = criticalHit(a);
+            damageAmount = fullEffect(a) * criticalHitValue;
+            if (yoyoActive == true && (criticalHitValue > 2)){
+                if (firstOrLast(a) == "first"){
+                    applyDamage(partyGroupList[partyGroupList.length - 1])
+                    handleXAttack(partyGroupList[partyGroupList.length - 1])
+                }
+                if (firstOrLast(a) == "last"){
+                    applyDamage(partyGroupList[0])
+                    handleXAttack(partyGroupList[0])
+                }
+                
+            }
+            if (slingActive == true && isLowestLevel(a)) {
+                damageAmount *= 2;
+            }
+            totalDamageDict[a.partyMember] = damageAmount + (totalDamageDict[a.partyMember] || 0);
+
+            if (((encounterNum == 4) || (encounterNum == 14)) && slimeWallHP > 0) {
+                slimeWallHP -= damageAmount;
+            } else {
+                encounter_HP -= damageAmount;
+            }
+
+            return damageAmount;
+        }
+
+        function handleXAttack(a) {
+            if (a.xAttack === 0) {
+            a.xAttack = 50;
+            setTimeout(() => a.xAttack = 0, 100);
+            if (encounterX === 1000) {
+            encounterX = 1010;
+            setTimeout(() => encounterX = 1000, 50);
+            }
+            }
+        }
+
+        function timeToAttack(a) {
+            if (gameClock % Math.max(4, 14 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Swordman") {
+                attackSoundWarrior.play();
+                numWarriorAttacks += 1;
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 24 - timeCut - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Berserker") {
+                attackSoundWarrior.play();
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                numWarriorAttacks += 1;
+                timeCut += 1;
+                if (timeCut >= 18) {
+                    timeCut = 18;
+                }
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 16 - chronomancerSpeedUp) == 0 && a.partyMember == "Barbarian") {
+                furyCasterLevel = a.level * 2;
+                getAdjacentToFuryCaster();
+                attackSoundWarrior.play();
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 28 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Executioner") {
+                attackSoundWarrior.play();
+                numWarriorAttacks += 1;
+                const damageAmount = Math.floor(applyDamage(a) * (numWarriorAttacks * 2));
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                numWarriorAttacks = 0;
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 12 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Scout") {
+                attackSoundRogue.play();
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 14 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Thief") {
+                attackSoundRogue.play();
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if ((gameClock % Math.max(4, 14 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 || bladeDancerInstaAttack == true) && a.partyMember == "Jester") {
+                attackSoundRogue.play();
+                bladeDancerInstaAttack = false;
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 12 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Assassin") {
+                attackSoundRogue.play();
+                assassinAuraEffect = true;
+                assassinLevel = a.level;
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 24 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Wizard") {
+                attackSoundWizard.play();
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 40 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Cryomancer") {
+                attackSoundWizard.play();
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 30 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Chronomancer") {
+                attackSoundWizard.play();
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                chronomancerSpeedUp = a.level;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 200 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Sorcerer") {
+                attackSoundWizard.play();
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+
+                let mageCounter = 0;
+                for (var key in partyGroupList) {
+                    if (partyGroupList[key].partyMember == "Wizard" || partyGroupList[key].partyMember == "Cryomancer" || partyGroupList[key].partyMember == "Chronomancer" || partyGroupList[key].partyMember == "Sorcerer") {
+                        mageCounter += 1;
+                    }
+                }
+
+                gameTimer += Math.floor((mageCounter));
+                timerColor = "blue";
+                setTimeout(() => timerColor = "black", 2000);
+                mageCounter = 0;
+
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 20 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Miner") {
+                attackSoundMercenaries.play();
+                minerGains = Math.ceil(a.level / 2);
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 20 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Vagabond") {
+                attackSoundMercenaries.play();
+                const damageAmount = Math.floor((applyDamage(a) / 4));
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 16 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Merchant") {
+                attackSoundMercenaries.play();
+                const damageAmount = applyDamage(a);
+                rerollCounter = a.level + mercenariesInParty;
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 20 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Contractor") {
+                attackSoundMercenaries.play();
+                coinCasterActive = true;
+                coinCasterLevel = a.level;
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 12 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Cultist") {
+                attackSoundVoiders.play();
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 16 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Devourer") {
+                attackSoundVoiders.play();
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 16 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Ritualist") {
+                attackSoundVoiders.play();
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 12 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Goose") {
+                gooseCounter += 1;
+                attackSoundVoiders.play();
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+                if (gooseCounter > 30){
+                    a.textColor = "gold";
+                    a.partyMember = "Golden Egg";
+                    a.addInfo = additionalInfo("Golden Egg");
+                    gooseCounter = 0;
+                }
+            }
+            if (gameClock % Math.max(4, 16 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Ascendant") {
+                attackSoundVoiders.play();
+                ascendantLvl = a.level;
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 16 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Paragon") {
+                attackSoundVoiders.play();
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 16 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Midas") {
+                attackSoundVoiders.play();
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+            if (gameClock % Math.max(4, 16 - chronomancerSpeedUp - furyCasterDict[a.partyMember]) == 0 && a.partyMember == "Tempest") {
+                tempestNum = 10;
+                attackSoundVoiders.play();
+                const damageAmount = applyDamage(a);
+                overallDamage += damageAmount;
+                checkBigHit(damageAmount);
+                handleXAttack(a);
+            }
+        }
+
+        function update(){
+            if (rewardChosenCounter >= 2){
+                shopSelectionList = [];
+                addpartyInfo = "";
+                partyInfo = "";
+                rewardChosenCounter = 0;
+                inShop = true;
+                inRewardRoom = false;
+                if (anvilActive == true){
+                    tempMember = partyGroupList[Math.floor(Math.random() * partyGroupList.length)]
+                    tempMember.level += 1;
+                    tempMember.font = "bold 30px Arial";
+                    setTimeout(() => tempMember.font = "30px Arial", 600);
+                }
+                newPartySlotIncrease = true;
+                newPartySlotSound.play();
+                setTimeout(() => newPartySlotIncrease = false, 4000);
+                stoprewardMusic();
+                startshopMusic();
+                refreshShop();
+            }
+            if (voidersInParty >= 1 && mercenariesInParty >= 1 && warriorsInParty >= 1 && magesInParty >= 1 && roguesInParty >= 1){
+                paragonMult = 8;                    
+            }
+            else {
+                paragonMult = 1;
+            }
+            purchaseAudio.volume = 0.25;
+            shopMusic.volume = 0.15;
+            rewardMusic.volume = 0.15;
+            newPartySlotSound.volume = 0.25;
+            ctx.font = "30px Arial";
+            if (gameTimer >= 0 && encounterNum < 20){
+            ctx.clearRect(0, 0, 1480, 840);
+            if (inCombat == true && inRewardRoom == false){
+                if (encounterNum >= 0 && encounterNum <= 4){
+                ctx.fillStyle = "#F3FEF0";
+                }
+                if (encounterNum >= 5 && encounterNum <= 9){
+                ctx.fillStyle = "#F1FFFF";
+                }
+                if (encounterNum >= 10 && encounterNum <= 14){
+                ctx.fillStyle = "#FFEAEB";
+                }
+                if (encounterNum >= 15 && encounterNum <= 19){
+                ctx.fillStyle = "#FCEEFE";
+                }
+                ctx.fillRect(0, 0, 1480, 840);
+            }
+            if (inRewardRoom == true){
+                ctx.fillStyle = "white";
+                ctx.fillRect(0, 0, 1480, 840)
+                ctx.fillStyle = "black";
+                ctx.fillText("Choose TWO", 670, 50);
+                gameTimer = 20 + hourGlassStatus;
+                ctx.fillText(`Floor: ${encounterNum + 1} / 20`, 1300, 800);
+                for(var key in shopSelectionList){
+                    if (shopSelectionList[key].purchased == false){
+                    ctx.fillStyle = "black";
+                    ctx.font = "22px Arial";
+                    ctx.fillText(`${shopSelectionList[key].partyMember}`, shopSelectionList[key].xNamePosition, shopSelectionList[key].yNamePosition)
+                    
+                    ctx.fillStyle = "black";
+                    ctx.drawImage(shopSelectionList[key].rewardImage, shopSelectionList[key].xCostPosition - 25, shopSelectionList[key].yCostPosition - 50, 80, 80);
+                }
+            }
+            }
+            //drawDebugRectangles();
+            ctx.fillStyle = "black";
+            ctx.font = "30px Arial";
+            ctx.fillText(`Coins: $${playerCoins}`, 1300, 750);
+
+            if (gameTimer <= 10){
+                ctx.font = "bold 30px Arial";
+            }
+            else {
+                ctx.font = "30px Arial";
+            }
+            ctx.fillStyle = timerColor;
+            ctx.fillText(`Timer: ${gameTimer}`, 1300, 100);
+            ctx.font = "25px Arial";
+            ctx.fillStyle = "black";
+            if (inRewardRoom){
+                ctx.fillStyle = "black";
+                ctx.fillText(`${addpartyInfo}`, 420, 475);
+            }
+            else {
+                ctx.fillStyle = "black";
+                ctx.fillText(`${addpartyInfo}`, 420, 525);
+                ctx.fillText(`${partyInfo}`, 420, 475);
+            }
+            for(var key in partyGroupList){
+                ctx.font = partyGroupList[key].font
+                ctx.fillStyle = partyGroupList[key].textColor;
+                ctx.fillText(`${partyGroupList[key].partyMember} - lvl ${partyGroupList[key].level}`, 100 + partyGroupList[key].xAttack, 250 + key * 50);
+                ctx.fillText(`${partyGroupList[key].criticalHit}`, 470, 250 + key * 50);
+                if (inShop && (totalDamageDict[partyGroupList[key].partyMember] ?? 0 !== 0) && recapOn == true){
+                    ctx.font = "20px Arial"
+                    ctx.fillText("("+ String(totalDamageDict[partyGroupList[key].partyMember]) + " damage)", 400, 250 + key * 50);
+                    ctx.font = "25px Arial"
+                }
+                if(frozen == true){
+                    ctx.fillStyle = "lightblue";
+                    ctx.fillRect(100, 250 + key * 50 - 30, 300, 40);
+                    ctx.fillStyle = "blue";
+                    ctx.fillText("          Frozen!", 100, 250 + key * 50);
+                }
+            }
+            for (var key in rewardInventoryList){
+                ctx.fillStyle = "white";
+                ctx.drawImage(rewardInventoryList[key].rewardImage, 95 + (60 * key), 30, 60, 60);
+            }
+
+            if (inCombat){
+                stopshopMusic();
+                gameClock += 1;
+
+                
+
+                if ((encounterNum == 4 || encounterNum == 9 || encounterNum == 14 || encounterNum == 19) && eliteMusicPlayed == false){
+                    eliteAudioCounter += 1;
+                    eliteEntrance.play();
+                    if (eliteAudioCounter > 60){
+                        eliteMusicPlayed = true;
+                    }
+                }
+
+                if (voidersInParty >= 1 && mercenariesInParty >= 1 && warriorsInParty >= 1 && magesInParty >= 1 && roguesInParty >= 1){
+                    if (prismActive && (gameClock % 80 == 0)){
+                        encounter_HP -= (encounterNum * 200);
+                    } 
+                }
+                if (encounterNum == 4){
+                    EncounterColor = "green";
+
+                    if(encounter_HP < 1250 && elitePhaseCounter == 0){
+                        slimeWallHP = 400;
+                        createSlimeWall = true;
+                        elitePhaseCounter += 1;
+                    }
+
+                    if(encounter_HP < 250 && elitePhaseCounter == 1){
+                        slimeWallHP = 400;
+                        createSlimeWall = true;
+                        elitePhaseCounter += 1;
+                    }
+
+                    if (slimeWallHP > 0 && createSlimeWall == true){
+                        if (encounterNum == 4){
+                            ctx.fillStyle = "lightgreen";
+                        }
+                        ctx.font = "80px Arial"
+                        ctx.fillText(`${slimeWallHP}`, 750, 420);
+                        ctx.fillRect(950, 40, 10, 760);
+                        ctx.fillStyle = "black"
+                    }
+                    else {
+                        createSlimeWall = false;
+                    }
+                }
+
+                else if (encounterNum == 9){
+                    EncounterColor = "teal";
+
+                    if (encounter_HP < 7000 && elitePhaseCounter == 0){
+                        frozen = true;
+                        setTimeout(() => frozen = false, 1500);
+                        elitePhaseCounter += 1;
+                    }
+                    if (encounter_HP < 5000 && elitePhaseCounter == 1){
+                        frozen = true;
+                        setTimeout(() => frozen = false, 1500);
+                        elitePhaseCounter += 1;
+                    }
+                    if (encounter_HP < 2000 && elitePhaseCounter == 2){
+                        frozen = true;
+                        setTimeout(() => frozen = false, 1500);
+                        elitePhaseCounter += 1;
+                    }
+                }
+
+                else if (encounterNum == 14){
+                    EncounterColor = "#FF8C00";
+                    if (encounter_HP < 0 & elitePhaseCounter == 0){
+                        encounter_HP = 30000;
+                        elitePhaseCounter += 1;
+                        phonixUp = false;
+                        eliteEntrance.play()
+                    }
+                }
+
+                else if (encounterNum == 19){
+                    EncounterColor = "purple";
+
+                    if (encounter_HP < 160000 & elitePhaseCounter == 0){
+                        counter -= 1;
+                        partyGroupList.splice(counter, 1);
+                        partySize -= 1;
+                        doom = true;
+                        setTimeout(() => doom = false, 2500);
+                        elitePhaseCounter += 1;
+                    }
+                    if (encounter_HP < 100000 & elitePhaseCounter == 1){
+                        counter -= 1;
+                        partyGroupList.splice(counter, 1);
+                        partySize -= 1;
+                        doom = true;
+                        setTimeout(() => doom = false, 2500);
+                        elitePhaseCounter += 1;
+                    }
+                    if (encounter_HP < 50000 & elitePhaseCounter == 2){
+                        counter -= 1;
+                        partyGroupList.splice(counter, 1);
+                        partySize -= 1;
+                        doom = true;
+                        setTimeout(() => doom = false, 2500);
+                        elitePhaseCounter += 1;
+                    }
+                    if (doom == true){
+                        ctx.fillStyle = "violet";
+                        ctx.fillRect(100, 250 + counter * 50 - 30, 280, 40);
+                        ctx.fillStyle = "purple";
+                        ctx.fillText("          Doomed!", 100, 250 + counter * 50);
+                        }
+                        else {
+                            doom = false;
+                        }
+                }
+                else {
+                    EncounterColor = "red";
+                }
+
+                ctx.font = EncounterFont;
+                ctx.fillStyle = EncounterColor;
+                ctx.fillText(`${encounter_HP}`, encounterX, 420);
+                ctx.font = "30px Arial";
+
+                if (gameTimer <= 5){
+                    gameTimerSlowDown = 10;
+                }
+
+                if (gameClock % (20 + ironHelmBonus + gameTimerSlowDown) == 0){
+                    gameTimer -= 1;
+                    if (magicStaffActive){
+                        magicStaffBonus += Math.floor(encounterNum / 2);
+                    }
+                }
+
+                for (var key in partyGroupList){
+                    if (frozen == false) {
+                        timeToAttack(partyGroupList[key]);
+                    }
+                }
+
+                if (encounter_HP <= 0 && phonixUp == false){
+                    extra_coins = Math.max(0, (10 + pocketWatchBonus) - gameTimer);
+                    playerCoins += extra_coins;
+                    eliteMusicPlayed = false;
+                    eliteAudioCounter = 0;
+                    playerCoins += merchantGains;
+                    totalCoins += merchantGains
+                    elitePhaseCounter = 0;
+                    playerCoins += minerGains;
+                    totalCoins += minerGains;
+                    if (encounterNum == 5 || encounterNum == 10 || encounterNum == 15){
+                        eliteCoins = 2 * encounterNum;
+                        totalCoins += eliteCoins;
+                        playerCoins += eliteCoins
+                    }
+                    playerCoins += (4 + Math.floor(encounterNum * 1.5));
+                    if (coinCasterActive == true){
+                        playerCoins -= 3;
+                        coinCasterBonus += coinCasterLevel * 3;
+                    }
+                    else {
+                        coinCasterBonus = 0;
+                        coinCasterActive = false;
+                        coinCasterAura = "";
+                    }
+                    if (dragonPipeActive == true){
+                        temp = partySizeMax - partyGroupList.length;
+                        extra_coins = (temp * 4)
+                        playerCoins += (temp * 4)
+                    }
+                    if (dumbbellActive == true){
+                        ritualistDamageIncrease += Math.floor(encounterNum / 2);
+                    }
+                    for (let key in furyCasterDict) {
+                        furyCasterDict[key] = 0;
+                    }
+                    inCombat = false;
+                    encounterDefeat.play();
+                    coinsForRound = (4 + Math.floor(encounterNum * 1.5)) + minerGains + merchantGains + eliteCoins + extra_coins;
+                    assassinLevel = 0;
+                    minerGains = 0;
+                    merchantGains = 0;
+                    timeCut = 0;
+                    eliteCoins = 0;
+                    assassinAuraEffect = false;
+                    encounterNum += 1;
+                    if(encounterNum == 14){
+                        phonixUp = true;
+                    }
+                    encounter_HP = encounter_HPList[encounterNum];
+                    if (encounterNum == 4 || encounterNum == 9 || encounterNum == 14 || encounterNum == 19){
+                        encounter_HP -= Math.floor(encounter_HP * (hornedViperBonus));
+                    }
+                    shopSelectionList = []
+                    totalCoins += (4 + encounterNum);
+                    coinsShowing = true;
+                    shurikenBonus = 0;
+                    gameTimerSlowDown = 0;
+                    setTimeout(() => coinsShowing = false, 4000);
+                    if (encounterNum == 5 || encounterNum == 10 || encounterNum == 15){
+                        partySizeMax += 1;
+                        newPartySlot += 1;
+                        inRewardRoom = true;
+                        refreshRewards();
+                        startrewardMusic();
+                    }
+                    else {
+                        if (anvilActive == true){
+                            tempMember = partyGroupList[Math.floor(Math.random() * partyGroupList.length)]
+                            tempMember.level += 1;
+                            tempMember.font = "bold 30px Arial";
+                            setTimeout(() => tempMember.font = "30px Arial", 600);
+                        }
+                        inShop = true;
+                        startshopMusic();
+                        refreshShop();
+                    }
+                }
+            }
+
+            if (inShop && encounterNum !== 20){
+                if (glowingEggCheck){
+                    partySize += 1;
+                    glowingEggCheck = false;
+                }
+                stoprewardMusic();
+                encounterX = 1000;
+                ctx.font = "30px Arial";
+                if (rerollCounter <= 0){
+                        rerollCost = 2
+                }
+                else{
+                    rerollCost = 0;
+                }
+                if (newPartySlotIncrease == true){
+                        ctx.fillStyle = "lightgreen"
+                        ctx.fillRect(100, 250 + newPartySlot * 50 - 30, 300, 40);
+                        ctx.fillStyle = "white";
+                        ctx.fillText("      New Party Slot!", 100, 250 + newPartySlot * 50);
+                        ctx.fillStyle = "black"
+                }
+                if (encounterNum == 0){
+                    ctx.fillStyle = "gray";
+                    ctx.font = "20px Arial";
+                    ctx.fillText("Buy members to build up your party! ->", 50, 150);
+                    ctx.fillText("^ Hover over party for stats, click to remove partymembers!", 50, 750);
+                    ctx.fillText("^ Your party needs to defeat", 1150, 150);
+                    ctx.fillText("this next Encounter within the timer!", 1150, 175);
+                    ctx.fillText("Coins (game currency) and floors remaining! ->", 850, 775);
+                    ctx.font = "30px Arial";
+                }
+                if (encounterNum == 3){
+                    ctx.fillStyle = "gray";
+                    ctx.font = "20px Arial";
+                    ctx.fillText("<- Remember that you can click to remove partymembers!", 600, 400);
+                    ctx.font = "30px Arial";
+                }
+                if (encounterNum == 1){
+                    ctx.fillStyle = "gray";
+                    ctx.font = "20px Arial";
+                    ctx.fillText("Use the Review button below to see stats from party's last encounter!", 500, 400);
+                    ctx.font = "30px Arial";
+                }
+                if (encounterNum == 4){
+                    ctx.fillStyle = "green"
+                    ctx.font = "bold 30px Arial";
+                    ctx.fillText("Elite Encounter! The SLIME (protects himself)", 475, 625);
+                }
+                if (encounterNum == 19){
+                    ctx.fillStyle = "purple"
+                    ctx.font = "bold 30px Arial";
+                    ctx.fillText("Elite Encounter! The VOID (destroys party)", 475, 625);
+                }
+                if (encounterNum == 9){
+                    ctx.fillStyle = "teal"
+                    ctx.font = "bold 30px Arial";
+                    ctx.fillText("Elite Encounter! The FROZEN (freezes party)", 475, 625);
+                }
+                if (encounterNum == 14){
+                    ctx.fillStyle = "#FF8C00"
+                    ctx.font = "bold 30px Arial";
+                    ctx.fillText("Elite Encounter! The FLAME (fiery rebirth)", 475, 625);
+                }
+
+                if (coinsShowing == true){
+                    ctx.fillStyle = "gold";
+                    ctx.font = "30px Arial";
+                    ctx.fillText(`+$${coinsForRound}`, 1380, 710);
+                }
+
+                if (playerCoins <= 2){
+                    rerollColor = "green";
+                }
+                else {
+                    rerollColor = "lightgreen";
+                }
+                ctx.font = "30px Arial";
+                gameClock = 0;
+                gameTimer = 20 + hourGlassStatus;
+                ctx.fillStyle = "black";
+                ctx.fillText(`Next Encounter: ${encounter_HPList[encounterNum]}`, 1150, 50);
+                ctx.fillText(`Floor: ${encounterNum + 1} / 20`, 1300, 800);
+                ctx.fillText(`Party Size: ${partySize}/${partySizeMax}`, 100, 700);
+                ctx.fillText(`Shop!`, 730, 50);
+                ctx.fillRect(680, 650, 210, 80)
+                ctx.fillStyle = rerollColor;
+                ctx.fillRect(680, 250, 210, 80);
+                ctx.fillStyle = "white";
+                ctx.fillText(`Reroll: $${rerollCost} coins`, 680, 300);
+                ctx.fillText(`GO !`, 750, 700);
+                if (encounterNum >= 1){
+                    ctx.fillStyle = "gray";
+                    ctx.fillRect(90, 725, 210, 80);
+                    ctx.fillStyle = "white"
+                    ctx.fillText(`Review`, 140, 775);
+                }
+                for(var key in shopSelectionList){
+                    if (shopSelectionList[key].purchased == false){
+                        for (var key2 in partyGroupList){
+                            if (shopSelectionList[key].partyMember == partyGroupList[key2].partyMember){
+                                ctx.fillStyle = shopSelectionList[key].backColor;
+                                ctx.fillRect(shopSelectionList[key].xRectangePosition - 10, shopSelectionList[key].yRectanglePosition - 10, 80, 80);
+                            }
+                        }
+                    ctx.fillStyle = shopSelectionList[key].textColor
+                    ctx.fillText(`${shopSelectionList[key].partyMember}`, shopSelectionList[key].xNamePosition, shopSelectionList[key].yNamePosition)
+                    ctx.fillRect(shopSelectionList[key].xRectangePosition, shopSelectionList[key].yRectanglePosition, 60, 60);
+                    ctx.fillStyle = "white";
+                    ctx.fillText(`$${shopSelectionList[key].coinCost}`, shopSelectionList[key].xCostPosition, shopSelectionList[key].yCostPosition);
+                }
+            }
+            }
+            }
+            else if (encounterNum >= 20 || true) {
+                ctx.clearRect(0, 0, 1480, 840);
+                gameWin = encounterNum >= 20;
+                ctx.fillStyle = gameWin ? "green" : "red";
+                ctx.fillText(gameWin ? "DARKNESS DEFEATED! - YOU WIN!" : "TIME OUT - GAME OVER!", 530, 200);
+                displayGameStats(encounterNum, overallDamage, highestDamage, totalCoins);
+            }
+
+            function displayGameStats(encounterNum, overallDamage, highestDamage, totalCoins) {
+                ctx.fillStyle = "black";
+                ctx.fillText(`Floors Cleared:   ${encounterNum} floors`, 550, 300);
+                ctx.fillStyle = "orange";
+                ctx.fillText(`Overall Coins Collected:   $${totalCoins} coins`, 431, 340);
+                ctx.fillStyle = "red";
+                ctx.fillText(`Overall Damage Dealt:   ${overallDamage} damage`, 450, 380);
+                ctx.fillText(`Highest Damage in One Attack:   ${highestDamage} damage`, 333, 420);
+            }
+        }
+    </script>
+    </body>
+</html>

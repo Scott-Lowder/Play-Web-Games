@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Scrabble Up</title>
+    </head>
+    <audio id="wordCorrectAudio">
+      <source src= "Game Sounds/CorrecWordNEW.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="roundDoneAudio">
+      <source src= "Game Sounds/EndRound.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="tileClicked">
+      <source src= "Game Sounds/TileClickNEW.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="tilePressed">
+      <source src= "Game Sounds/TilePressedNEW.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="rewardSound">
+      <source src= "Game Sounds/Reward sound.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="wordDone">
+      <source src= "Game Sounds/WordDone.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="gameWin">
+      <source src= "Game Sounds/gameWinNEW.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="relicActiveAudio">
+      <source src= "Game Sounds/RELICNEW.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="gameOverAudio">
+      <source src= "Game Sounds/GAMEOVER NEW 2.0.mp3" type="audio/mpeg">
+    </audio>
+    <img id="snakeCharmImg" src="Game Images/Hissing Ring.bin" hidden>
+    <img id="anchorImg" src="Game Images/Anchor.bin" hidden>
+    <img id="bullseye" src="Game Images/Bullseye.bin" hidden>
+    <img id="d4" src="Game Images/D4.bin" hidden>
+    <img id="trophy" src="Game Images/Statuette.bin" hidden>
+    <img id="twoHearts" src="Game Images/2 of Hearts.bin" hidden>
+    <img id="glowingEgg" src="Game Images/Glowing Egg.bin" hidden>
+    <img id="yoyo" src="Game Images/Faerie Pact.bin" hidden>
+    <img id="world" src="Game Images/Archmage Orb.bin" hidden>
+    <img id="heart" src="Game Images/Change of Heart.bin" hidden>
+    <img id="scales" src="Game Images/Scales.bin" hidden>
+    <img id="prism" src="Game Images/Prism.bin" hidden>
+    <img id="thimble" src="Game Images/Thimble.bin" hidden>
+    <img id="sushi" src="Game Images/Sushi.bin" hidden>
+    <img id="eyePatch" src="Game Images/Eyepatch.bin" hidden>
+    <img id="cauldron" src="Game Images/Bowl.bin" hidden>
+    <body>
+    <canvas id="ctx" width="1480" height="830"></canvas>
+    <script>
+        const wordCorrectAudio = document.getElementById("wordCorrectAudio");
+        const roundDoneAudio = document.getElementById("roundDoneAudio");
+        const tileClicked = document.getElementById("tileClicked");
+        const tilePressed = document.getElementById("tilePressed");
+        const rewardSound = document.getElementById("rewardSound");
+        const wordDone = document.getElementById("wordDone");
+        const gameWin = document.getElementById("gameWin");
+        const snakeCharmImg = document.getElementById("snakeCharmImg");
+        const anchorImg = document.getElementById("anchorImg");
+        const bullseye = document.getElementById("bullseye");
+        const d4 = document.getElementById("d4");
+        const trophy = document.getElementById("trophy");
+        const twoHearts = document.getElementById("twoHearts");
+        const glowingEgg = document.getElementById("glowingEgg");
+        const yoyo = document.getElementById("yoyo");
+        const world = document.getElementById("world");
+        const heart = document.getElementById("heart");
+        const scales = document.getElementById("scales");
+        const prism = document.getElementById("prism");
+        const thimble = document.getElementById("thimble");
+        const sushi = document.getElementById("sushi");
+        const eyePatch = document.getElementById("eyePatch");
+        const cauldron = document.getElementById("cauldron");
+        const relicActiveAudio = document.getElementById("relicActiveAudio");
+        const gameOverAudio = document.getElementById("gameOverAudio");
+        canvas = document.getElementById("ctx");
+        ctx = canvas.getContext("2d");
+
+        const particles = [];
+
+        let currentInputLetters = ["", "", "", "", "+3", "+4", "+5", "+10", "+10", "+20"];
+        let currentInputColors = ["#eee", "#eee", "#eee", "#eee", "#eee", "#eee", "#eee", "#eee", "#eee", "#eee",]
+        let currentInputValues = ["", "", "", "", "", "", "", "", "", ""]
+        let currentInputTracking = ["", "", "", "", "", "", "", "", "", ""]
+        let wordScore = 0;
+        let correctInputRaised = false;
+        let overallScore = 0
+        let progressBarWidth = 0;
+        let remainingBarWidth = canvas.width - 8;
+        let requiredScore = 100;
+        let currentRound = 1;
+        let maxPlays = 5;
+        let currentPlays = 5;
+        let requiredScoreList = [0, 20, 30, 40, 50, 70, 90, 110, 140, 170, 200];
+        let rerollTileIndex = 17;
+        let tilesOnGrid = [];
+        let mouseX = 0;
+        let mouseY = 0;
+        let inputGridBonus = 
+          ["+3", "+6", "+12", "+24",
+          "+4", "+8", "+16", "+32",
+          "+5", "+10", "+20", "+40",
+          "+10", "+20", "+40", "+80",
+          "+20", "+40", "+80", "+160"
+        ];
+        let rerollsRemaining = 2;
+        let infoBox1 = "";
+        let infoBox2 = "";
+        let infoUpgradeColor = "black"
+        let boosted = false;
+        let wordMultiplier = 0;
+        let multiplyBracket1 = "";
+        let multiplyBracket2 = "";
+        let lengthOfWord = 0;
+        let numOfWordsScored = 0;
+        let maximumWordScore = 0;
+        let rewardInventoryList = [];
+        let relicOptionsList = [];
+        let relicOption1 = "";
+        let relicOption2 = "";
+        let glowingEggBonus = 1;
+        let bullseyeList = [1, 1, 1, 1, 1, 1];
+        let tempFirstLetter = "";
+        let tempLastLetter = "";
+        let numberOfTilesUsed = 0;
+        let maximumWord = "";
+        let tempWord = "";
+        let totalPointsScored = 0;
+        let tempWordDisplay = "";
+        let activeRelicsWord = "";
+        let particlesOn = false;
+
+        let currentTileBag = []
+        let checkerHeadingText = ""
+        let checkerHeadingTextColor = "black"
+        let gameLoopState = "scrabble";
+        let currentUpgradeChoice = 0;
+        let currentAdditionChoice = 0;
+        let hasEnteredShop = false;
+        let gameEndTitle = "Game Over";
+        let gameOver = false;
+
+        const vowels = ["a", "e", "i", "o", "u"];
+
+        const clickableAreas = [
+        { x: 0, y: 290, width: 50, height: 50, id: `RewardSlot 1`},
+        { x: 0, y: 350, width: 50, height: 50, id: `RewardSlot 2`},
+        { x: 0, y: 410, width: 50, height: 50, id: `RewardSlot 3`},
+        { x: 0, y: 470, width: 50, height: 50, id: `RewardSlot 4`},
+        { x: 0, y: 530, width: 50, height: 50, id: `RewardSlot 5`},
+        { x: 0, y: 590, width: 50, height: 50, id: `RewardSlot 6`},
+        ];
+
+        function displayRelicImgs(){
+          let y = 290
+
+          for (let i = 0; i < rewardInventoryList.length; i++) {
+            const rewardKey = rewardInventoryList[i];
+            if (rewardKey) {
+              const rewardData = rewardDescription[rewardKey];
+              ctx.drawImage(rewardData[1], 0, y, 50, 50);
+              if (rewardData[2] === true) {
+                const time = Date.now();
+                const blinkOn = Math.floor(time / 750) % 2 === 0;
+                if (blinkOn) {
+                  ctx.fillStyle = "white";
+                  ctx.fillRect(0, y, 50, 50);
+                }
+              }
+            }
+            y += 60;
+          }
+        }
+
+        function generateArrayWithRandomFour() {
+          bullseyeList = [1, 1, 1, 1, 1, 1];
+          const randomIndex = Math.floor(Math.random() * 5);
+          bullseyeList[randomIndex] = 4;
+        }
+
+        function chooseRandomReward() {
+            const rewards = ["Cauldron", "Eye Patch", "Sushi", "Anchor", "Trophy", "Yoyo", "Scales", "2 of Hearts", "Thimble", "Prism", "Heart", "World", "Bullseye", "Glowing Egg", "D4", "Snake Charm",];
+            let random_Value;
+
+            while (true) {
+                random_Value = Math.floor(Math.random() * 16);
+                const selectedReward = rewards[random_Value];
+
+                if (!rewardInventoryList.includes(selectedReward) && !relicOptionsList.includes(selectedReward)) {
+                    return selectedReward;
+                }
+            }
+        }
+
+        function isInsideRect(mouseX, mouseY, rect) {
+        return (
+            mouseX > rect.x &&
+            mouseX < rect.x + rect.width &&
+            mouseY > rect.y &&
+            mouseY < rect.y + rect.height
+            );
+        }
+
+        function drawDebugRectangles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (const area of clickableAreas) {
+                ctx.strokeStyle = 'gray';
+                ctx.strokeRect(area.x, area.y, area.width, area.height);
+            }
+        }
+
+
+
+        const upgrades = ["Boost", "Charged", "Shadow", "Growth"];
+
+        const alphabet = [
+          "A", "B", "C", "D", "E", "F", "G",
+          "H", "I", "J", "K", "L", "M", "N",
+          "O", "P", "Q", "R", "S", "T", "U",
+          "V", "W", "X", "Y", "Z"
+        ];
+
+        const letterValues = {
+          A: 1, B: 3, C: 3, D: 2, E: 1, F: 4, G: 2, H: 4, I: 1,
+          J: 8, K: 5, L: 1, M: 3, N: 1, O: 1, P: 3, Q: 10, R: 1,
+          S: 1, T: 1, U: 1, V: 4, W: 4, X: 8, Y: 4, Z: 10
+        };
+
+        let rewardDescription = {
+          "Snake Charm": ["When scoring a word, add an “S” if valid.", snakeCharmImg, false],
+          "Anchor": ["2X Word Score if word starts with a vowel.", anchorImg, false],
+          "Glowing Egg": ["Double the bonus points of bonus tiles.", glowingEgg, false],
+          "D4": ["Start with +4 extra rerolls each round.", d4, false],
+          "Trophy": ["If only one play remains, 3X next Word Score.", trophy, false],
+          "2 of Hearts": ["3X Word Score if the word has a double letter.", twoHearts, false],
+          "Bullseye": ["Quadruple a random bonus tile’s points each round.", bullseye, false],
+          "Yoyo": ["3X Word Score if word starts & ends with same letter.", yoyo, false],
+          "World": ["Add +2 points to every W, O, R, L, and D tile.", world, false],
+          "Heart": ["Add +2 points to every H, E, A, R, and T tile.", heart, false],
+          "Scales": ["2X Word Score if the word is 6+ letters long.", scales, false],
+          "Prism": ["Randomly upgrade 16 tiles in your Letter Bag.", prism, false],
+          "Thimble": ["2X Word Score if word has no repeating letters.", thimble, true],
+          "Sushi": ["2X Word Score if word uses tiles from all 4 rows.", sushi, true],
+          "Eye Patch": ["2X Word Score if no center tiles are used.", eyePatch, true],
+          "Cauldron": ["Randomly upgrade a tile after scoring a word.", cauldron, false],
+        }
+
+        const allUpgradeDescript = {
+          "Growth": ["green", "After each round, this tile permanently gains +2 points."],
+          "Shadow": ["#BA55D3", "Gains +2 points per tile beforehand in the word."],
+          "Boost": ["#B03060", "Doubles the next tile's points."],
+          "Charged": ["orange", "If not played this turn, this tile gains +5 points."],
+        }
+
+        const allTileColors = {
+          "0": ["#999999", "#eee"],
+          "Growth": ["green", "#A8E6A3"],
+          "Shadow": ["#BA55D3", "#D6B3FF"],
+          "Charged": ["orange", "#FFD8A8"],
+          "Boost": ["#B03060", "#FFB6C1"],
+          "Charged": ["orange", "#FFD8A8"],
+        }
+
+        const allAdditionDescript = {
+          1: '“ING” tile (+12 points)',
+          2: '"DIS" tile (+12 points)',
+          3: '"LY" tile (+15 points)',
+          4: '"PRE" tile (+15 points)',
+          5: '"ED" tile (+9 points)',
+          6: '"IVE" tile (+18 points)',
+          7: '"!" tile (+1 point)',
+        }
+
+        const tileDistribution = [
+          { letter: 'A', count: 7 }, { letter: 'B', count: 2 }, { letter: 'C', count: 1 },
+          { letter: 'D', count: 3 }, { letter: 'E', count: 10 }, { letter: 'F', count: 1 },
+          { letter: 'G', count: 2 }, { letter: 'H', count: 1 }, { letter: 'I', count: 7 },
+          { letter: 'J', count: 1 }, { letter: 'K', count: 1 }, { letter: 'L', count: 3 },
+          { letter: 'M', count: 1 }, { letter: 'N', count: 5 }, { letter: 'O', count: 6 },
+          { letter: 'P', count: 1 }, { letter: 'Q', count: 1 }, { letter: 'R', count: 5 },
+          { letter: 'S', count: 3 }, { letter: 'T', count: 5 }, { letter: 'U', count: 3 },
+          { letter: 'V', count: 1 }, { letter: 'W', count: 1 }, { letter: 'X', count: 1 },
+          { letter: 'Y', count: 1 }, { letter: 'Z', count: 1 }
+        ];
+
+        function scoreProgressBar(){
+          ctx.fillStyle = "lightgreen";
+          ctx.fillRect(10, 0, progressBarWidth, 50);
+        }
+
+        function playsRemainingBar(){
+          if (currentPlays > 2){
+            ctx.fillStyle = "#eee";
+          }
+          else {
+            ctx.fillStyle = "#FF9999";
+          }
+          ctx.fillRect(10, canvas.height - 50, remainingBarWidth, 50);
+        }
+
+        function isUnique(str) {
+          return new Set(str).size === str.length;
+        }
+
+        function isUniqueExcludingLast(str) {
+          return new Set(str.slice(0, -1)).size === str.length - 1;
+        }
+
+        function centerUnused() {
+          const noCentersPressed = !(
+          tilesOnGrid[5].pressed ||
+          tilesOnGrid[6].pressed ||
+          tilesOnGrid[9].pressed ||
+          tilesOnGrid[10].pressed
+          );
+
+          const atLeastOnePressed = tilesOnGrid.some(tile => tile.pressed);
+
+          return noCentersPressed && atLeastOnePressed;
+        }
+
+        function everyColumnCovered(array) {
+          let allGroupsHavePressed = true;
+
+          for (let i = 0; i < array.length; i += 4) {
+            let groupHasPressed = false;
+
+            for (let j = 0; j < 4; j++) {
+              if (array[i + j].pressed) {
+                groupHasPressed = true;
+                break;
+              }
+            }
+
+            if (!groupHasPressed) {
+              allGroupsHavePressed = false;
+              break;
+            }
+          }
+          return allGroupsHavePressed
+        }
+
+        function doInputScoring(){
+          numberOfTilesUsed = 0;
+          if (wordMultiplier == 0){
+            wordMultiplier += 1;
+          }
+          if (rewardInventoryList.includes("Anchor") && vowels.includes(tempWord[0])){
+            wordMultiplier += 1;
+          }
+
+          if (rewardInventoryList.includes("Trophy") && currentPlays == 1){
+            wordMultiplier += 2;
+          }
+
+          if (rewardInventoryList.includes("Yoyo") && tempFirstLetter == tempLastLetter){
+            wordMultiplier += 2;
+          }
+
+          if (rewardInventoryList.includes("Scales") && lengthOfWord >= 6){
+            wordMultiplier += 1;
+          }
+
+          if (rewardInventoryList.includes("2 of Hearts")){
+            for (let i = 0; i < lengthOfWord - 1; i++){
+              tempLetter = "$"
+              if (i != 0){
+                tempLetter = tempWord[i - 1];
+              }
+              if (tempLetter == tempWord[i]){
+                wordMultiplier += 2
+                break
+              }
+            }
+          }
+
+          if (rewardInventoryList.includes("Thimble")){
+            if (!rewardInventoryList.includes("Snake Charm") && isUnique(tempWord)){
+              wordMultiplier += 1;
+            }
+            else if (rewardInventoryList.includes("Snake Charm") && isUniqueExcludingLast(tempWord)){
+              wordMultiplier += 1;
+            }
+          }
+
+          if (rewardInventoryList.includes("Sushi") && everyColumnCovered(tilesOnGrid)){
+            wordMultiplier += 1
+          }
+
+          if (rewardInventoryList.includes("Eye Patch") && centerUnused()){
+            wordMultiplier += 1
+          }
+
+          
+          for (let i = 0; i < currentInputValues.length; i ++){
+            if (currentInputValues[i] != ""){
+              numberOfTilesUsed += 1;
+              const index = i
+              wordScore = wordScore + Number(currentInputValues[i]);
+                if (index === 4) {
+                  wordScore = wordScore + 5 * glowingEggBonus * bullseyeList[0];
+                  currentInputValues[i] = Number(currentInputValues[i]) + 3 * glowingEggBonus * bullseyeList[0];
+                } else if (index === 5) {
+                  wordScore = wordScore + 5 * glowingEggBonus * bullseyeList[1];
+                  currentInputValues[i] = Number(currentInputValues[i]) + 4 * glowingEggBonus * bullseyeList[1];
+                } else if (index === 6) {
+                  wordScore = wordScore + 5 * glowingEggBonus * bullseyeList[2];
+                  currentInputValues[i] = Number(currentInputValues[i]) + 5 * glowingEggBonus * bullseyeList[2];
+                } else if (index === 7) {
+                  wordScore = wordScore + 10 * glowingEggBonus * bullseyeList[3];
+                  currentInputValues[i] = Number(currentInputValues[i]) + 10 * glowingEggBonus * bullseyeList[3];
+                } else if (index === 8) {
+                  wordScore = wordScore + 10 * glowingEggBonus * bullseyeList[4];
+                  currentInputValues[i] = Number(currentInputValues[i]) + 10 * glowingEggBonus * bullseyeList[4];
+                } else if (index === 9) {
+                  wordScore = wordScore + 20 * glowingEggBonus * bullseyeList[5];
+                  currentInputValues[i] = Number(currentInputValues[i]) + 20 * glowingEggBonus * bullseyeList[5];
+                }
+            }
+          }
+          numOfWordsScored += 1;
+          wordScore = wordScore * wordMultiplier;
+          if (wordScore > (requiredScoreList[currentRound] / 2)){
+            particlesOn = true
+            setTimeout(() => particlesOn = false, 3500);
+          }
+          totalPointsScored += wordScore;
+          tempMaximumWordScore = maximumWordScore
+          maximumWordScore = Math.max(maximumWordScore, wordScore);
+          if (tempMaximumWordScore != maximumWordScore){
+            maximumWord = tempWord.toUpperCase();
+          }
+          overallScore +=wordScore;
+          progressRatio = Math.min((overallScore) / requiredScoreList[currentRound], 1);
+          progressBarWidth = canvas.width * progressRatio;
+          currentPlays -= 1;
+          remainingRatio = Math.min((currentPlays) / maxPlays, 1);
+          remainingBarWidth = canvas.width * remainingRatio;
+          if (rewardInventoryList.includes("Cauldron")){
+            cauldronUpgrade();
+          }
+        }
+
+        function resetCurrentInputLetters(){
+          currentInputLetters = ["", "", "", "", `+${3 * glowingEggBonus * bullseyeList[0]}`, `+${4 * glowingEggBonus * bullseyeList[1]}`, `+${5 * glowingEggBonus * bullseyeList[2]}`, `+${10 * glowingEggBonus * bullseyeList[3]}`, `+${10 * glowingEggBonus * bullseyeList[4]}`, `+${20 * glowingEggBonus * bullseyeList[5]}`];
+          currentInputValues = ["", "", "", "", "", "", "", "", "", ""];
+          currentInputColors = ["#eee", "#eee", "#eee", "#eee", "#eee", "#eee", "#eee", "#eee", "#eee", "#eee",];
+          currentInputTracking = ["", "", "", "", "", "", "", "", "", ""];
+          for (tile of tilesOnGrid){
+            tile.pressed = false
+          }
+          wordMultiplier = 0;
+          lengthOfWord = 0;
+        }
+
+        function partialReroll(){
+          for (let i = 0; i < tilesOnGrid.length; i++) {
+            if (tilesOnGrid[i].pressed == true){
+              tileData = currentTileBag[(rerollTileIndex % currentTileBag.length)]
+              tilesOnGrid[i].label = tileData.label;
+              tilesOnGrid[i].value = tileData.value;
+              tilesOnGrid[i].modifier = tileData.modifier;
+
+              tilesOnGrid[i].pressed = false;
+              tilesOnGrid[i].position = 0;
+              rerollTileIndex ++;
+            }
+          }
+        }
+
+        function fullReroll(){
+          resetCurrentInputLetters();
+          for (let i = 0; i < tilesOnGrid.length; i++) {
+            tileData = currentTileBag[(rerollTileIndex % currentTileBag.length)]
+            tilesOnGrid[i].label = tileData.label;
+            tilesOnGrid[i].value = tileData.value;
+            tilesOnGrid[i].modifier = tileData.modifier;
+
+            tilesOnGrid[i].pressed = false;
+            tilesOnGrid[i].position = 0;
+            rerollTileIndex ++;
+            wordDone.play()
+          }
+        }
+        function checkCurrentWord(){
+          if (correctInputRaised == true){
+            return
+          }
+          tempWord = "";
+          for (letter of currentInputLetters){
+            if (!inputGridBonus.includes(letter)){
+              tempWord = tempWord + letter
+            }
+          }
+          if (rewardInventoryList.includes("Snake Charm") && !tempWord.includes("!")){
+            let tempTempWord = tempWord + "s";
+            tempTempWord = tempTempWord.toLowerCase();
+            // Check if adding "S" keeps the word length within grid capacity (10 slots)
+            if (wordSet.has(tempTempWord) && tempTempWord !== "" && tempWord.length < 10) {
+                let sPlaced = false;
+                for (let i = 0; i < 4; i++) {
+                    if (currentInputLetters[i] === "") {
+                      currentInputLetters[i] = "S";
+                      currentInputValues[i] = 1;
+                      currentInputColors[i] = "#eee";
+                      tempWord = tempTempWord;
+                      sPlaced = true;
+                      break;
+                    }
+                }
+                if (!sPlaced) {
+                    for (let i = 4; i < currentInputLetters.length; i++) {
+                        if (inputGridBonus.includes(currentInputLetters[i])) {
+                          currentInputLetters[i] = "S";
+                          currentInputValues[i] = 1;
+                          currentInputColors[i] = "#eee"; // Set default color for "S"
+                          tempWord = tempTempWord;
+                          sPlaced = true;
+                          break;
+                        }
+                    }
+                }
+                if (!sPlaced) {
+                    console.log("No slot available for Snake Charm 'S'");
+                }
+            }
+          }
+          tempWordDisplay = tempWord.toUpperCase();
+          lengthOfWord = tempWord.length;
+          if (tempWord.includes("!")) {
+            const match = tempWord.match(/^(.*?)(!+)$/);
+            if (match) {
+              tempWord = match[1];
+            } else {
+              resetCurrentInputLetters()
+              checkerHeadingText = "Invalid Word"
+              checkerHeadingTextColor = "red"
+              setTimeout(() => checkerHeadingText = "", 2500);
+              setTimeout(() => checkerHeadingTextColor = "black", 2500);
+              return
+            }
+          }
+          tempWord = tempWord.toLowerCase()
+          if (wordSet.has(tempWord) == true && lengthOfWord >= 4){
+            tempFirstLetter = tempWord[0]
+            tempLastLetter = tempWord[tempWord.length - 1];
+            if (tempFirstLetter != tempLastLetter && rewardInventoryList.includes("Snake Charm") && tempWord.length > 1){
+              tempLastLetter = tempWord[tempWord.length - 2];
+            }
+            doInputScoring();
+            if (overallScore < requiredScoreList[currentRound]){
+              wordCorrectAudio.play();
+            }
+            checkerHeadingText = `${tempWordDisplay}: ${wordScore}`
+            checkerHeadingTextColor = "green"
+            correctInputRaised = true;
+            multiplyBracket1 = "(";
+            multiplyBracket2 = `) x ${wordMultiplier}`;
+            setTimeout(() => checkerHeadingText = "", 2500);
+            setTimeout(() => checkerHeadingTextColor = "black", 2500);
+            setTimeout(() => correctInputRaised = false, 2500);
+            setTimeout(() => currentInputLetters = ["", "", "", "", `+${3 * glowingEggBonus * bullseyeList[0]}`, `+${4 * glowingEggBonus * bullseyeList[1]}`, `+${5 * glowingEggBonus * bullseyeList[2]}`, `+${10 * glowingEggBonus * bullseyeList[3]}`, `+${10 * glowingEggBonus * bullseyeList[4]}`, `+${20 * glowingEggBonus * bullseyeList[5]}`], 2500);
+            setTimeout(() => currentInputValues = ["", "", "", "", "", "", "", "", "", ""], 2500);
+            setTimeout(() => currentInputTracking = ["", "", "", "", "", "", "", "", "", ""], 2500);
+            setTimeout(() => currentInputColors = ["#eee", "#eee", "#eee", "#eee", "#eee", "#eee", "#eee", "#eee", "#eee", "#eee",], 2500);
+            setTimeout(() => multiplyBracket1 = "", 2500);
+            setTimeout(() => multiplyBracket2 = "", 2500);
+            setTimeout(() => wordMultiplier = 0, 2500);
+            setTimeout(() => lengthOfWord = 0, 2500);
+            if (overallScore < requiredScoreList[currentRound]){
+              setTimeout(() => wordDone.play(), 2500);
+            }
+            for (tile of tilesOnGrid){
+              if (tile.modifier == "Charged"){
+                tile.value = tile.value +5;
+              }
+            }
+            wordScore = 0;
+            partialReroll();
+          }
+          else {
+            resetCurrentInputLetters()
+            if (wordSet.has(tempWord) == true && lengthOfWord < 4){
+              checkerHeadingText = "Minimum 4 Letters Required";
+            }
+            else {
+              checkerHeadingText = "Invalid Word";
+            }
+            checkerHeadingTextColor = "red"
+            setTimeout(() => checkerHeadingText = "", 2500);
+            setTimeout(() => checkerHeadingTextColor = "black", 2500);
+          }
+        }
+
+        function shuffleArray(array) {
+          for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+          }
+        }
+
+        function generateTileBag() {
+          currentTileBag = []; // reset the bag
+
+          for (const tile of tileDistribution) {
+            for (let i = 0; i < tile.count; i++) {
+              currentTileBag.push({
+              label: tile.letter,
+              value: letterValues[tile.letter],
+              modifier: "0"
+              });
+            }
+          }
+          shuffleArray(currentTileBag)
+        }
+
+        let wordSet = new Set();
+
+        const gridSize = 4;
+        const tileSize = 100;
+        const spacing = 10;
+
+        const totalGridSize = gridSize * tileSize + (gridSize - 1) * spacing;
+        const startX = (canvas.width - totalGridSize) / 2;
+        const startY = (canvas.height - totalGridSize) / 2 + 100;
+
+        // Each tile holds state info
+
+        generateTileBag(); // Create and shuffle the tile bag
+
+
+        function initialReroll(){
+          for (let row = 0; row < gridSize; row++) {
+            for (let col = 0; col < gridSize; col++) {
+              const tileIndex = row * gridSize + col;
+              const tileData = currentTileBag[tileIndex];
+              tilesOnGrid.push({
+                row,
+                col,
+                x: startX + col * (tileSize + spacing),
+                y: startY + row * (tileSize + spacing),
+                width: tileSize,
+                height: tileSize,
+                label: tileData.label,
+                value: tileData.value,
+                pressed: false,
+                position: 0,
+                modifier: tileData.modifier,
+              });
+            }
+          }
+        }
+
+        function drawPlayerGrid() {
+          for (tile of tilesOnGrid) {
+            const scale = tile.isHovered ? 1.05 : 1.0;
+            const scaledWidth = tile.width * scale;
+            const scaledHeight = tile.height * scale;
+            const offsetX = (scaledWidth - tile.width) / 2;
+            const offsetY = (scaledHeight - tile.height) / 2;
+            const drawX = tile.x - offsetX;
+            const drawY = tile.y - offsetY;
+
+            // Draw background
+            ctx.fillStyle = tile.pressed ? allTileColors[tile.modifier][0] : allTileColors[tile.modifier][1];
+            ctx.fillRect(drawX, drawY, scaledWidth, scaledHeight);
+
+            // Draw border
+            ctx.strokeStyle = "#000";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(drawX, drawY, scaledWidth, scaledHeight);
+
+            // Draw label
+            if (tile.label) {
+              ctx.fillStyle = "#000";
+              ctx.font = "20px Arial";
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillText(tile.label, drawX + scaledWidth / 2, drawY + scaledHeight / 2);
+              ctx.font = "16px Arial";
+              ctx.fillText(tile.value, drawX + scaledWidth / 2, drawY + scaledHeight / 2 + 25);
+            }
+          }
+        }
+
+        function displayBonusTileValue(index){
+          if (inputGridBonus.includes(currentInputLetters[index])){
+            return ""
+          }
+          if (index < 4 || correctInputRaised == true){
+            return currentInputValues[index]
+          }
+          if (index === 4) {
+              return Number(currentInputValues[index]) + 3 * glowingEggBonus * bullseyeList[0];
+          } else if (index === 5) {
+            return Number(currentInputValues[index]) + 4 * glowingEggBonus * bullseyeList[1];
+          } else if (index === 6) {
+            return Number(currentInputValues[index]) + 5 * glowingEggBonus * bullseyeList[2];
+          } else if (index === 7) {
+            return Number(currentInputValues[index]) + 10 * glowingEggBonus * bullseyeList[3];
+          } else if (index === 8) {
+            return Number(currentInputValues[index]) + 10 * glowingEggBonus * bullseyeList[4];
+          } else if (index === 9) {
+            return Number(currentInputValues[index]) + 20 * glowingEggBonus * bullseyeList[5];
+          }
+        }
+
+        function drawInputWordGrid(tileWidth = 100, tileHeight = 100, spacing = 10) {
+
+          let tileCount = 10;
+          const totalGridWidth = tileCount * tileWidth + (tileCount - 1) * spacing;
+
+          // Calculate horizontal start position to center the grid
+          let startX = (ctx.canvas.width - totalGridWidth) / 2;
+          let startY = (ctx.canvas.height - tileHeight) / 2 - 250;
+          for (let i = 0; i < tileCount; i++) {
+            let x = startX + i * (tileWidth + spacing);
+            let y = startY;
+            if ((currentInputLetters[i] != "" && !inputGridBonus.includes(currentInputLetters[i])) && (correctInputRaised == true)){
+              y -= 25
+              setTimeout(() => y += 25, 2000);
+            }
+            //#eee
+            ctx.fillStyle = currentInputColors[i];          // tile background color
+            ctx.fillRect(x, y, tileWidth, tileHeight);
+
+            ctx.strokeStyle = '#000';        // tile border color
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, tileWidth, tileHeight);
+
+            ctx.fillStyle = "#000";
+            ctx.font = "20px Arial";
+            if ((currentInputLetters[i] != "" && !inputGridBonus.includes(currentInputLetters[i])) && (correctInputRaised == true)){
+              ctx.fillStyle = "green";
+            }
+            ctx.fillText(currentInputLetters[i], x + tileWidth / 2, y + tileHeight / 2);
+            ctx.font = "16px Arial";
+            ctx.fillText(`${displayBonusTileValue(i)}`, x + tileWidth / 2, y + tileHeight / 2 + 25);
+            if ((correctInputRaised == true) && (currentInputValues[i] != "") && (!inputGridBonus.includes(currentInputLetters[i]))){
+              ctx.font = "Bold 24px Arial"
+              ctx.fillStyle = "green"
+              ctx.fillText(`+${currentInputValues[i]}`, x + tileWidth / 2, y + tileHeight / 2 - 75);
+            }
+          }
+        }
+
+        function worldReward(){
+          for (tile of currentTileBag){
+            if (tile.label == "W" || tile.label == "O" || tile.label == "R" || tile.label == "L" || tile.label == "D"){
+              tile.value += 2;
+            }
+          }
+        }
+
+        function heartReward(){
+          for (tile of currentTileBag){
+            if (tile.label == "H" || tile.label == "E" || tile.label == "A" || tile.label == "R" || tile.label == "T"){
+              tile.value += 2;
+            }
+          }
+        }
+      
+        fetch('words_alpha.txt')
+          .then(res => {
+            if (!res.ok) throw new Error("File not found");
+            return res.text();
+          })
+          .then(text => {
+            const words = text.replace(/\r/g, '').split('\n');
+            words.forEach(word => wordSet.add(word.trim().toLowerCase()));
+          })
+          .catch(err => console.error("Failed to load words:", err));
+
+
+        class CircleButton {
+                constructor(x, y, radius, text, baseColor, hoverColor, clickAction) {
+                    this.x = x;
+                    this.y = y;
+                    this.radius = radius;
+                    this.text = text;
+                    this.baseColor = baseColor;
+                    this.hoverColor = hoverColor;
+                    this.clickAction = clickAction;
+                    this.isHovered = false;
+                }
+
+                draw() {
+                    // Circle
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = this.isHovered ? this.hoverColor : this.baseColor;
+                    ctx.fill();
+                    
+                    // Border
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = "#333";
+                    ctx.stroke();
+
+                    // Reset shadow
+                    ctx.shadowColor = "transparent";
+
+                    // Text
+                    ctx.fillStyle = "white";
+                    ctx.font = `bold 20px Arial`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(this.text, this.x, this.y);
+                }
+
+                isMouseOver(mouseX, mouseY) {
+                    const distance = Math.sqrt((mouseX - this.x) ** 2 + (mouseY - this.y) ** 2);
+                    return distance <= this.radius;
+                }
+            }
+
+            // Create three stacked buttons
+            let buttons = [
+                new CircleButton(
+                    canvas.width / 2 + 300,
+                    canvas.height * 0.3 + 100,
+                    60,
+                    "🚫",
+                    "#FF9999",
+                    "#CC4444",
+                    () => {
+                      if (gameLoopState == "scrabble"){
+                        wordDone.currentTime = 0;
+                        wordDone.play()
+                        resetCurrentInputLetters()
+                      }
+                    }
+                ),
+                new CircleButton(
+                    canvas.width / 2 + 300,
+                    canvas.height * 0.5 + 100,
+                    60,
+                    `🔄`,
+                    "#E6CCFF",
+                    "#9966CC",
+                    () => {
+                      if (rerollsRemaining > 0 && gameLoopState == "scrabble"){
+                        fullReroll()
+                        rerollsRemaining -= 1
+                      }
+                    }
+                ),
+                new CircleButton(
+                    canvas.width / 2 + 300,
+                    canvas.height * 0.7 + 100,
+                    60,
+                    "✅",
+                    "#CCFFCC",
+                    "#66CC66",
+                    () => {
+                      if (gameLoopState == "scrabble"){
+                        checkCurrentWord()
+                      }
+                    }
+                )
+            ];
+
+            let shopButtons = [
+                new CircleButton(
+                    canvas.width / 2 - 300,
+                    canvas.height * 0.5,
+                    265,
+                    "",
+                    "white",
+                    "#CCCCCC",
+                    () => {
+                      if (gameLoopState == "shop"){
+                        tileClicked.currentTime = 0;
+                        tileClicked.play();
+                        commitUpgrade()
+                      }
+                    } 
+                ),
+                new CircleButton(
+                    canvas.width / 2 + 300,
+                    canvas.height * 0.5,
+                    265,
+                    "",
+                    "white",
+                    "#CCCCCC",
+                    () => {
+                      if (gameLoopState == "shop"){
+                        tileClicked.currentTime = 0;
+                        tileClicked.play();
+                        commitAddition()
+                      }
+                    }                    
+                ),
+            ];
+
+            let rewardButtons = [
+                new CircleButton(
+                    canvas.width / 2 - 475,
+                    canvas.height * 0.5,
+                    232,
+                    "",
+                    "white",
+                    "#CCCCCC",
+                    () => {
+                      if (gameLoopState == "reward"){
+                        tileClicked.currentTime = 0;
+                        tileClicked.play();
+                        rewardInventoryList.push(relicOption1);
+                        if (relicOption1 == "Glowing Egg"){
+                          glowingEggBonus += 1;
+                        }
+                        if (relicOption1 == "World"){
+                          worldReward();
+                        }
+                        if (relicOption1 == "Heart"){
+                          heartReward();
+                        }
+                        if (relicOption1 == "Prism"){
+                          prismUpgrade();
+                        }
+                        refreshNewRound();
+                      }
+                    } 
+                ),
+                new CircleButton(
+                    canvas.width / 2,
+                    canvas.height * 0.5,
+                    232,
+                    "",
+                    "white",
+                    "#CCCCCC",
+                    () => {
+                      if (gameLoopState == "reward"){
+                        tileClicked.currentTime = 0;
+                        tileClicked.play();
+                        rewardInventoryList.push(relicOption2);
+                        if (relicOption2 == "Glowing Egg"){
+                          glowingEggBonus += 1;
+                        }
+                        if (relicOption2 == "World"){
+                          worldReward();
+                        }
+                        if (relicOption2 == "Heart"){
+                          heartReward();
+                        }
+                        if (relicOption2 == "Prism"){
+                          prismUpgrade();
+                        }
+                        refreshNewRound();
+                      }
+                    }                    
+                ),
+                new CircleButton(
+                    canvas.width / 2 + 475,
+                    canvas.height * 0.5,
+                    232,
+                    "",
+                    "white",
+                    "#CCCCCC",
+                    () => {
+                      if (gameLoopState == "reward"){
+                        tileClicked.currentTime = 0;
+                        tileClicked.play();
+                        rewardInventoryList.push(relicOption3);
+                        if (relicOption3 == "Glowing Egg"){
+                          glowingEggBonus += 1;
+                        }
+                        if (relicOption3 == "World"){
+                          worldReward();
+                        }
+                        if (relicOption3 == "Heart"){
+                          heartReward();
+                        }
+                        if (relicOption3 == "Prism"){
+                          prismUpgrade();
+                        }
+                        refreshNewRound();
+                      }
+                    }                    
+                ),
+            ];
+
+            // Event Listeners
+            canvas.addEventListener("mousemove", (e) => {
+              const rect = canvas.getBoundingClientRect();
+              const mouseX = e.clientX - rect.left;
+              const mouseY = e.clientY - rect.top;
+
+              let hoveredTileFound = false;
+              let hoveredRelic = false;
+
+              for (const area of clickableAreas){
+                if (isInsideRect(mouseX, mouseY, area)){
+                  if (area.id == "RewardSlot 1" && rewardInventoryList[0]){
+                      infoUpgradeColor = "black";
+                      infoBox1 = rewardInventoryList[0];
+                      infoBox2 = rewardDescription[rewardInventoryList[0]][0]
+                      hoveredRelic = true;
+                      break;
+                  }
+                  if (area.id == "RewardSlot 2" && rewardInventoryList[1]){
+                      infoUpgradeColor = "black";
+                      infoBox1 = rewardInventoryList[1];
+                      infoBox2 = rewardDescription[rewardInventoryList[1]][0]
+                      hoveredRelic = true;
+                      break;
+                  }
+                  if (area.id == "RewardSlot 3" && rewardInventoryList[2]){
+                      infoUpgradeColor = "black";
+                      infoBox1 = rewardInventoryList[2];
+                      infoBox2 = rewardDescription[rewardInventoryList[2]][0]
+                      hoveredRelic = true;
+                      break;
+                  }
+                  if (area.id == "RewardSlot 4" && rewardInventoryList[3]){
+                      infoUpgradeColor = "black";
+                      infoBox1 = rewardInventoryList[3];
+                      infoBox2 = rewardDescription[rewardInventoryList[3]][0]
+                      hoveredRelic = true;
+                      break;
+                  }
+                }
+              }
+
+              for (tile of tilesOnGrid) {
+                tile.isHovered = (
+                  mouseX >= tile.x &&
+                  mouseX <= tile.x + tile.width &&
+                  mouseY >= tile.y &&
+                  mouseY <= tile.y + tile.height
+                );
+
+                if (tile.isHovered){
+                  hoveredRelic = false;
+                }
+
+                if (tile.isHovered && tile.modifier != "0") {
+                  infoUpgradeColor = allTileColors[tile.modifier][0];
+                  infoBox1 = tile.modifier;
+                  infoBox2 = allUpgradeDescript[tile.modifier][1];
+                  hoveredTileFound = true;
+                }
+              }
+
+              if (!hoveredTileFound && !hoveredRelic) {
+                infoBox1 = "";
+                infoBox2 = "";
+              }
+
+              buttons.forEach(button => {
+                button.isHovered = button.isMouseOver(mouseX, mouseY);
+              });
+              shopButtons.forEach(button => {
+                button.isHovered = button.isMouseOver(mouseX, mouseY);
+              });
+              rewardButtons.forEach(button => {
+                button.isHovered = button.isMouseOver(mouseX, mouseY);
+              });
+            });
+
+            canvas.addEventListener("click", (e) => {
+              const rect = canvas.getBoundingClientRect();
+              const mouseX = e.clientX - rect.left;
+              const mouseY = e.clientY - rect.top;
+
+              const clickX = e.clientX - rect.left;
+              const clickY = e.clientY - rect.top;
+
+              for (tile of tilesOnGrid) {
+                if (
+                  clickX >= tile.x && clickX <= tile.x + tile.width &&
+                  clickY >= tile.y && clickY <= tile.y + tile.height
+                ) {
+                  if (tile.pressed == false && gameLoopState == "scrabble") {
+                    tileClicked.currentTime = 0;
+                    tileClicked.play();
+                    lettersPlayed = 0;
+                    for (let i = 0; i < 10; i++){
+                      if (currentInputLetters[i] == "" || inputGridBonus.includes(currentInputLetters[i])){
+                        currentInputLetters[i] = tile.label;
+                        currentInputColors[i] = allTileColors[tile.modifier][1];
+                        tile.position = i
+                        if (currentInputTracking[i - 1] == "X" && tile.modifier == "Shadow"){
+                          currentInputValues[i] = tile.value * 2 + (2 * lettersPlayed);
+                        }
+                        else if (currentInputTracking[i - 1] == "X"){
+                          currentInputValues[i] = tile.value * 2;
+                        }
+                        else if (tile.modifier == "Shadow"){
+                          currentInputValues[i] = tile.value + (2 * lettersPlayed);
+                        }
+                        else {
+                          currentInputValues[i] = tile.value;
+                        }
+                        if (tile.modifier == "Boost"){
+                          currentInputTracking[i] = "X";
+                        }
+                        break
+                      }
+                      lettersPlayed += 1;
+                    }
+                  }
+                  else {
+                    if (gameLoopState == "scrabble"){
+                      tilePressed.currentTime = 0;
+                      tilePressed.play();
+                    }
+                    if (tile.modifier == "Boost"){
+                      tempindex = currentInputTracking.lastIndexOf("X");
+                      if (tempindex != -1){
+                        currentInputTracking[tempindex] = "";
+                      }
+                    }
+                    const index = tile.position;
+                    if (index === 4) {
+                      currentInputLetters[index] = `+${3 * glowingEggBonus * bullseyeList[0]}`;
+                    } else if (index === 5) {
+                      currentInputLetters[index] = `+${4 * glowingEggBonus * bullseyeList[1]}`;
+                    } else if (index === 6) {
+                      currentInputLetters[index] = `+${5 * glowingEggBonus * bullseyeList[2]}`;
+                    } else if (index === 7) {
+                      currentInputLetters[index] = `+${10 * glowingEggBonus * bullseyeList[3]}`;
+                    } else if (index === 8) {
+                      currentInputLetters[index] = `+${10 * glowingEggBonus * bullseyeList[4]}`;
+                    } else if (index === 9) {
+                      currentInputLetters[index] = `+${20 * glowingEggBonus * bullseyeList[5]}`;
+                    } else {
+                      currentInputLetters[index] = "";
+                    }
+                    currentInputValues[tile.position] = "";
+                    currentInputColors[tile.position] = "#eee";
+                    tile.position = 0
+                  }
+                  tile.pressed = !tile.pressed;
+                  break;
+                }
+              }
+
+              buttons.forEach(button => {
+                  if (button.isMouseOver(mouseX, mouseY)) {
+                      button.clickAction();
+                  }
+              });
+              shopButtons.forEach(button => {
+                  if (button.isMouseOver(mouseX, mouseY)) {
+                      button.clickAction();
+                  }
+              });
+              rewardButtons.forEach(button => {
+                  if (button.isMouseOver(mouseX, mouseY)) {
+                      button.clickAction();
+                  }
+              });
+            });
+
+          function refreshNewRound(){
+            if (rewardInventoryList.includes("Bullseye")){
+              generateArrayWithRandomFour()
+            }
+            currentInputLetters = ["", "", "", "", `+${3 * glowingEggBonus * bullseyeList[0]}`, `+${4 * glowingEggBonus * bullseyeList[1]}`, `+${5 * glowingEggBonus * bullseyeList[2]}`, `+${10 * glowingEggBonus * bullseyeList[3]}`, `+${10 * glowingEggBonus * bullseyeList[4]}`, `+${20 * glowingEggBonus * bullseyeList[5]}`];;
+            currentInputColors = ["#eee", "#eee", "#eee", "#eee", "#eee", "#eee", "#eee", "#eee", "#eee", "#eee",]
+            currentInputValues = ["", "", "", "", "", "", "", "", "", ""];
+            currentInputTracking = ["", "", "", "", "", "", "", "", "", ""];
+            hasEnteredShop = false
+            currentRound += 1;
+            overallScore = 0;
+            currentPlays = maxPlays;
+            progressBarWidth = 0;
+            remainingBarWidth = canvas.width - 8;
+            if (rewardInventoryList.includes("D4")){
+              rerollsRemaining = 6;
+            }
+            else {
+              rerollsRemaining = 2;
+            }
+            shuffleArray(currentTileBag);
+            rerollTileIndex = 0;
+            fullReroll();
+            gameLoopState = "scrabble";
+            relicOptionsList = []
+          }
+
+          function cauldronUpgrade() {
+              let tempUpgradesLeft = 1;
+              for (let tile of tilesOnGrid) {
+                if (tile.modifier === "0" && tempUpgradesLeft > 0 && tile.pressed == false) {
+                  console.log("Hello");
+                  tile.modifier = upgrades[Math.floor(Math.random() * upgrades.length)];
+                  tempUpgradesLeft--;
+                }
+              }
+          }
+
+          function prismUpgrade() {
+            for (let modifier of upgrades) {
+              let tempUpgradesLeft = 4;
+              for (let tile of currentTileBag) {
+                if (tile.modifier === "0" && tempUpgradesLeft > 0) {
+                  tile.modifier = modifier;
+                  tempUpgradesLeft--;
+                }
+              }
+            }
+            refreshNewRound();
+          }
+
+          function commitUpgrade(){
+            tempUpgradesLeft = 4;
+            for (tile of currentTileBag){
+              if (tile.modifier == "0" && tempUpgradesLeft > 0){
+                if (currentUpgradeChoice == "Growth"){
+                  tile.modifier = "Growth"
+                }
+                if (currentUpgradeChoice == "Boost"){
+                  tile.modifier = "Boost"
+                }
+                if (currentUpgradeChoice == "Charged"){
+                  tile.modifier = "Charged"
+                }
+                if (currentUpgradeChoice == "Shadow"){
+                  tile.modifier = "Shadow"
+                }
+                tempUpgradesLeft -= 1;
+              }
+            }
+            refreshNewRound();
+          }
+
+          function commitAddition(){
+            tempTileLetter = "";
+            tempTileValue = 0;
+            if (currentAdditionChoice == 1){
+              tempTileLetter = "ING";
+              tempTileValue = 12;
+            }
+            if (currentAdditionChoice == 2){
+              tempTileLetter = "DIS";
+              tempTileValue = 12;
+            }
+            if (currentAdditionChoice == 3){
+              tempTileLetter = "LY";
+              tempTileValue = 15;
+            }
+            if (currentAdditionChoice == 4){
+              tempTileLetter = "PRE";
+              tempTileValue = 15;
+            }
+            if (currentAdditionChoice == 5){
+              tempTileLetter = "ED";
+              tempTileValue = 9;
+            }
+            if (currentAdditionChoice == 6){
+              tempTileLetter = "IVE";
+              tempTileValue = 18;
+            }
+            if (currentAdditionChoice == 7){
+              tempTileLetter = "!";
+              tempTileValue = 1;
+            }
+            for (let i = 0; i < 2; i++) {
+              currentTileBag.push({
+              label: tempTileLetter,
+              value: tempTileValue,
+              modifier: "0"
+              });
+            }
+            refreshNewRound();
+          }
+
+          function additionDisplay(){
+            ctx.fillStyle = "black",
+            ctx.font = "Bold 24px Arial",
+            ctx.fillText("Add 2 tiles into your Letter Bag:", canvas.width / 2 + 300, canvas.height * 0.5 - 25,);
+            ctx.fillText(`${allAdditionDescript[currentAdditionChoice]}`, canvas.width / 2 + 300, canvas.height * 0.5 + 25,);
+          }
+
+          function upgradeDisplay(){
+            ctx.fillStyle = "black",
+            ctx.font = "Bold 24px Arial",
+            ctx.fillText("Upgrade 4 tiles in your Letter Bag with:", canvas.width / 2 - 300, canvas.height * 0.5 - 50,);
+            ctx.fillStyle = allUpgradeDescript[currentUpgradeChoice][0]
+            ctx.fillText(`${currentUpgradeChoice}`, canvas.width / 2 - 300, canvas.height * 0.5,);
+            ctx.fillStyle = "black",
+            ctx.font = "Bold 18px Arial",
+            ctx.fillText(`${allUpgradeDescript[currentUpgradeChoice][1]}`, canvas.width / 2 - 300, canvas.height * 0.5 + 50,);
+          }
+
+          function relic1Display(){
+            ctx.fillStyle = "black",
+            ctx.font = "Bold 32px Arial",
+            ctx.drawImage(rewardDescription[relicOption1][1], canvas.width / 2 - 525, canvas.height * 0.5 - 175, 100, 100);
+            ctx.fillText(`${relicOption1}`, canvas.width / 2 - 475, canvas.height * 0.5 - 25,);
+            ctx.font = "Bold 18px Arial",
+            ctx.fillText(`${rewardDescription[relicOption1][0]}`, canvas.width / 2 - 475, canvas.height * 0.5 + 25,);
+          }
+
+          function relic2Display(){
+            ctx.fillStyle = "black",
+            ctx.font = "Bold 32px Arial",
+            ctx.drawImage(rewardDescription[relicOption2][1], canvas.width / 2 - 50, canvas.height * 0.5 - 175, 100, 100);
+            ctx.fillText(`${relicOption2}`, canvas.width / 2, canvas.height * 0.5 - 25,);
+            ctx.font = "Bold 18px Arial",
+            ctx.fillText(`${rewardDescription[relicOption2][0]}`, canvas.width / 2, canvas.height * 0.5 + 25,);
+          }
+
+          function relic3Display(){
+            ctx.fillStyle = "black",
+            ctx.font = "Bold 32px Arial",
+            ctx.drawImage(rewardDescription[relicOption3][1], canvas.width / 2 + 425, canvas.height * 0.5 - 175, 100, 100);
+            ctx.fillText(`${relicOption3}`, canvas.width / 2 + 475, canvas.height * 0.5 - 25,);
+            ctx.font = "Bold 18px Arial",
+            ctx.fillText(`${rewardDescription[relicOption3][0]}`, canvas.width / 2 + 475, canvas.height * 0.5 + 25,);
+          }
+
+          function areRelicsActive(){
+            relicOnWord = "";
+            for (letter of currentInputLetters){
+              if (!inputGridBonus.includes(letter)){
+                relicOnWord += letter;
+              }
+            }
+
+            if (currentInputLetters[0][0]){
+              firstLetter = currentInputLetters[0][0].toLowerCase();
+            }
+
+            if (relicOnWord.length > 0){
+              lastLetter = relicOnWord[relicOnWord.length - 1].toLowerCase();
+            }
+
+            let prevStates = {};
+            for (let relic in rewardDescription){
+              prevStates[relic] = rewardDescription[relic][2];
+            }
+
+            if (rewardInventoryList.includes("Anchor") && vowels.includes(firstLetter) && relicOnWord.length > 0){
+              rewardDescription["Anchor"][2] = true;
+            } else {
+              rewardDescription["Anchor"][2] = false;
+            }
+
+
+            
+
+            if (rewardInventoryList.includes("Trophy") && currentPlays == 1){
+              rewardDescription["Trophy"][2] = true;
+            } else {
+              rewardDescription["Trophy"][2] = false;
+            }
+
+            if (rewardInventoryList.includes("Yoyo") && firstLetter == lastLetter && relicOnWord.length > 1){
+              rewardDescription["Yoyo"][2] = true;
+            } else {
+              rewardDescription["Yoyo"][2] = false;
+            }
+
+            if (rewardInventoryList.includes("Scales") && relicOnWord.length >= 6){
+              rewardDescription["Scales"][2] = true;
+            } else {
+              rewardDescription["Scales"][2] = false;
+            }
+
+            if (rewardInventoryList.includes("Sushi") && everyColumnCovered(tilesOnGrid)){
+              rewardDescription["Sushi"][2] = true;
+            } else {
+              rewardDescription["Sushi"][2] = false;
+            }
+
+            if (rewardInventoryList.includes("Eye Patch") && centerUnused() && relicOnWord.length >= 4){
+              rewardDescription["Eye Patch"][2] = true;
+            } else {
+              rewardDescription["Eye Patch"][2] = false;
+            }
+
+            if (rewardInventoryList.includes("2 of Hearts")) {
+              let hasDouble = false;
+              for (let i = 1; i < relicOnWord.length; i++) {
+                if (relicOnWord[i] === relicOnWord[i - 1]) {
+                  hasDouble = true;
+                  break;
+                }
+              }
+              rewardDescription["2 of Hearts"][2] = hasDouble;
+            }
+
+            if (rewardInventoryList.includes("Thimble")){
+              if (
+                (!rewardInventoryList.includes("Snake Charm") && isUnique(relicOnWord) && relicOnWord.length >= 4) ||
+                (rewardInventoryList.includes("Snake Charm") && isUniqueExcludingLast(relicOnWord) && relicOnWord.length >= 4)
+              ) {
+                rewardDescription["Thimble"][2] = true;
+              } else {
+                rewardDescription["Thimble"][2] = false;
+              }
+            }
+            for (let relic in rewardDescription){
+              if (!prevStates[relic] && rewardDescription[relic][2]){
+                relicActiveAudio.play()
+                break;
+              }
+            }
+          }
+
+          class Particle {
+            constructor(x, y) {
+              this.x = x;
+              this.y = y;
+              this.size = Math.random() * 4 + 2;
+              this.speedY = Math.random() * 2 + 0.5;
+              this.speedX = (Math.random() - 0.5) * 1;
+              this.alpha = 0.3;
+              this.color = `144, 238, 144, ${this.alpha})`;
+            }
+
+            update() {
+              this.y += this.speedY;
+              this.x += this.speedX;
+              this.alpha -= 0.02;
+              this.color = `rgba(144, 238, 144, ${this.alpha})`;
+            }
+
+            draw(ctx) {
+              ctx.fillStyle = this.color;
+              ctx.beginPath();
+              ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+            isAlive() {
+              return this.alpha > 0;
+            }
+          }
+
+          function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+              const p = particles[i];
+              p.update();
+              if (!p.isAlive()) particles.splice(i, 1);
+            }
+          }
+
+          function drawParticles() {
+            particles.forEach(p => p.draw(ctx));
+          }
+
+          function emitParticles() {
+            if (particlesOn) {
+              for (let i = 0; i < 15; i++) {
+                let x = Math.random() * progressBarWidth;
+                let y = 50;
+                particles.push(new Particle(x, y));
+              }
+            }
+          }
+          
+          setInterval(update, 50);
+          
+          generateTileBag();
+          initialReroll();
+
+          function update(){
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            if (overallScore >= requiredScoreList[currentRound] && gameLoopState == "scrabble" && hasEnteredShop == false && currentRound < 10){
+              relicOption1 = chooseRandomReward();
+              relicOptionsList.push(relicOption1);
+              relicOption2 = chooseRandomReward();
+              relicOptionsList.push(relicOption2);
+              relicOption3 = chooseRandomReward();
+              if (currentRound < 7){
+                currentUpgradeChoice = upgrades[(Math.floor(Math.random() * 4) + 1) - 1]
+              }
+              else {
+                currentUpgradeChoice = upgrades[(Math.floor(Math.random() * 3) + 1) - 1]
+              }
+              currentAdditionChoice = Math.floor(Math.random() * 7) + 1;
+              hasEnteredShop = true;
+              roundDoneAudio.play();
+              for (tile of currentTileBag){
+                if (tile.modifier == "Growth"){
+                  tile.value += 2;
+                }
+              }
+              if (currentRound % 2 == 0){
+                setTimeout(() => gameLoopState = "reward", 2500);
+              }
+              else {
+                setTimeout(() => gameLoopState = "shop", 2500);
+              }
+              if (currentRound < 11){
+                setTimeout(() => rewardSound.play(), 2750);
+              }
+            }
+            if (currentPlays <= 0 && overallScore < requiredScoreList[currentRound] && gameLoopState == "scrabble" && gameOver == false){
+              gameOver = true
+              setTimeout(() => gameLoopState = "gameFinished", 2500);
+              setTimeout(() => gameOverAudio.play(), 2500);
+            }
+            if (currentRound == 10 && overallScore >= requiredScoreList[currentRound] && gameLoopState == "scrabble" && hasEnteredShop == false){
+              hasEnteredShop = true;
+              roundDoneAudio.play();
+              setTimeout(() => gameLoopState = "gameFinished", 2500);
+              setTimeout(() => gameWin.play(), 2500);
+            }
+            if (gameLoopState == "scrabble"){
+              drawInputWordGrid()
+              drawPlayerGrid();
+              ctx.font = "18px Arial";
+              buttons.forEach(button => button.draw());
+              ctx.fillText(`${rerollsRemaining}x`, canvas.width / 2 + 300, canvas.height * 0.5 + 120,);
+              ctx.fillStyle = checkerHeadingTextColor;
+              ctx.font = "32px Arial";
+              ctx.fillText(checkerHeadingText, canvas.width / 2, 250);
+              scoreProgressBar();
+              playsRemainingBar();
+              ctx.fillStyle = "black";
+              ctx.fillText(`${overallScore} / ${requiredScoreList[currentRound]}`, canvas.width / 2, 25);
+              ctx.fillText("Score", 50, 25);
+              ctx.fillText(`Round ${currentRound} / 10`, canvas.width - 120, 25);
+              ctx.fillText("Plays", 50, canvas.height - 25);
+              areRelicsActive();
+              displayRelicImgs();
+              ctx.fillStyle = "black";
+              ctx.fillText(`${currentPlays}`, canvas.width - 30, canvas.height - 25);
+              ctx.font = "Bold 24px Arial"
+              ctx.fillStyle = infoUpgradeColor;
+              ctx.fillText(`${infoBox1}`, canvas.width / 2 - 475, canvas.height * 0.3 + 120,)
+              ctx.fillStyle = "black";
+              ctx.font = "Bold 16px Arial";
+              ctx.fillText(`${infoBox2}`, canvas.width / 2 - 475, canvas.height * 0.3 + 170,)
+              ctx.font = "24px Arial"
+              ctx.fillStyle = "green"
+              if (wordMultiplier > 1){
+                ctx.fillText(`${multiplyBracket1}`, 200, 65);
+                ctx.fillText(`${multiplyBracket2}`, 200 + (112 * numberOfTilesUsed), 65);
+              }
+              emitParticles();
+              updateParticles();
+              drawParticles();
+            }
+            else if (gameLoopState == "shop"){
+              shopButtons.forEach(button => button.draw());
+              ctx.fillStyle = "black"
+              ctx.font = "Bold 32px Arial";
+              ctx.fillText("Choose an Upgrade or Addition!", canvas.width / 2, 100)
+              upgradeDisplay();
+              additionDisplay();
+            }
+            else if (gameLoopState == "reward"){
+              rewardButtons.forEach(button => button.draw());
+              ctx.fillStyle = "black"
+              ctx.font = "Bold 32px Arial";
+              ctx.fillText("Choose a Relic!", canvas.width / 2, 100)
+              relic1Display();
+              relic2Display();
+              relic3Display();
+            }
+            else if (gameLoopState == "gameFinished"){
+              if (currentRound == 10 && overallScore >= requiredScoreList[currentRound]){
+                ctx.fillStyle = "lightgreen";
+                gameEndTitle = "You Win!"
+              }
+              else {
+                ctx.fillStyle = "#ff6666";
+              }
+              ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+              ctx.fillStyle = "white";
+              ctx.font = "Bold 56px Arial";
+              ctx.textAlign = "center";
+              ctx.fillText(`${gameEndTitle}`, canvas.width / 2, canvas.height * 0.2 + 120)
+              ctx.font = "Bold 32px Arial";
+              ctx.fillText(`Rounds Cleared: ${currentRound}`, canvas.width / 2, canvas.height * 0.3 + 120)
+              ctx.fillText(`Total Points Scored: ${totalPointsScored}`, canvas.width / 2, canvas.height * 0.4 + 120)
+              ctx.fillText(`Words Scored: ${numOfWordsScored}`, canvas.width / 2, canvas.height * 0.5 + 120)
+              ctx.fillText(`Highest Word Scored: ${maximumWord} (${maximumWordScore} points)`, canvas.width / 2, canvas.height * 0.6 + 120)
+            }
+          }
+
+      </script>
+    </body>
+</html>

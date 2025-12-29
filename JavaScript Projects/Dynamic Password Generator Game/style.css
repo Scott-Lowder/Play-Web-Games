@@ -1,0 +1,87 @@
+body{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-items: center;
+}
+
+.gameContainer{
+    text-align: center;
+    align-items: center;
+}
+
+.rectangle{
+    position: absolute;
+    background-color: transparent;
+    z-index: -1;
+}
+
+.leftSideRect{
+    top: 0;
+    left: 0;
+    width: 350px;
+    height: 857px;
+    background-color: #7E7F9A;
+}
+
+.rightSideRect{
+    top: 0;
+    right: 0;
+    width: 350px;
+    height: 857px;
+    background-color: #7E7F9A;
+}
+
+.topRect{
+    top: 0;
+    left: 0;
+    width: 1480px;
+    height: 60px;
+    background-color: #7E7F9A;
+}
+
+.centerRect{
+    top: 6.5%;
+    left: 23.1%;
+    width: 813px;
+    height: 801px;
+    background-color: #97A7B3;
+}
+
+#gameTitleHeader{
+    font-size: 30px;
+    font-family: bold Arial, Helvetica, sans-serif;
+    margin-top: 60px;
+    padding: 40px;
+}
+
+#passwordLabel{
+    padding: 40px
+
+}
+
+#inputBox{
+    width: 295px;
+    height: 20px;
+    resize: none;
+    font-size: 20px;
+}
+
+.scrollable-list {
+    padding-top: 20%;
+    width: 500px;
+    height: 360px;
+    border: 3px solid black;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+    list-style-type: none;
+    padding: 5px;
+    margin: 30px auto 0;
+}
+
+.line {
+    padding: 10px;
+    margin: 5px 0;
+    font-size: 15px;
+    background-color: #e0e0e0;
+}

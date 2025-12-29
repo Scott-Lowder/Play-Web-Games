@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+    <title>Gliding Platformer Game</title>
+    <canvas id="ctx" width="1480" height="840" style="border: 1px solid #000000;"></canvas>
+    <script>
+        var ctx = document.getElementById("ctx").getContext("2d");
+        ctx.font = "30px Arial";
+        capeList = [];
+        obstacleList = [];
+        avoidAreaList = [];
+        goalList = [];
+
+        spawn_locationX = 120;
+        spawn_locationY = 400;
+
+        gravity = 0.25;
+        level_value = 1;
+
+
+
+        //player properties
+        var player = {};
+        player.x = spawn_locationX;
+        player.y = spawn_locationY;
+        player.size = 20;
+        player.set_height = 420;
+        player.isGliding = false;
+        player.glideDuration = 80;
+
+        //movement variables
+        player.velocityX = 0;
+        player.velocityY = 0;
+        player.accelerationX = 0;
+        player.accelerationY = 0
+        player.friction = 0.9;
+        player.maxSpeed = 10;
+
+        //level assets
+        function createPlatform(x, y, width, height){
+            var obstacle = {}
+            obstacle.x = x;
+            obstacle.y = y;
+            obstacle.width = width;
+            obstacle.height = height;
+            obstacleList.push(obstacle);
+        }
+
+        function createDanger(x, y, width, height){
+            var avoidArea = {}
+            avoidArea.x = x;
+            avoidArea.y = y;
+            avoidArea.width = width;
+            avoidArea.height = height;
+            avoidAreaList.push(avoidArea);
+        }
+
+        function createGoal(x, y, width, height){
+            var goal = {}
+            goal.x = x;
+            goal.y = y;
+            goal.width = width;
+            goal.height = height;
+            goalList.push(goal);
+        }
+
+        function isPlatformColliding(player, obstacle){
+            return(
+            player.y + player.size <= obstacle.y &&
+            player.y + player.size + player.velocityY >= obstacle.y &&
+            player.x + player.size > obstacle.x &&
+            player.x < obstacle.x + obstacle.width);
+        }
+
+        function isColliding(player, obstacle){
+            return !(player.x + player.size <= obstacle.x ||
+                player.x >= obstacle.x + obstacle.width ||
+                player.y + player.size <= obstacle.y ||
+                player.y >= obstacle.y + obstacle.height);
+        }
+
+        function deleteCape(cape){
+            const index = capeList.indexOf(cape);
+            if (index !== -1){
+                capeList.splice(index, 1);
+            }
+        }
+
+        function createCape(){
+            var cape = {}
+            cape.x = player.x
+            cape.y = player.y
+            cape.size = 5
+            capeList.push(cape);
+            setTimeout(function() {
+                deleteCape(cape)}, 1000);
+        }
+
+
+        function player_movement(event){
+            if (event.key === "a"){
+                player.accelerationX = -1;
+            }
+            else if (event.key === "d"){
+                player.accelerationX = 1;
+            }
+            else if (event.key === "w" && player.glideDuration > 0){
+                player.isGliding = true;
+            }
+        }
+
+        function stopMovement(event) {
+            if (event.key === "a" || event.key === "d"){
+                player.accelerationX = 0;
+            }
+            if (event.key === "w"){
+                player.isGliding = false;
+            }
+        }
+
+        window.addEventListener("keydown", player_movement);
+        window.addEventListener("keyup", stopMovement);
+
+        setInterval(update, 50);
+
+        new_level()
+
+        //level creation
+        function new_level(){
+            obstacleList = []
+            avoidAreaList = []
+            goalList = []
+
+            if (level_value == 1){
+                spawn_locationX = 120;
+                spawn_locationY = 400;
+                player.x = spawn_locationX;
+                player.y = spawn_locationY;
+                createPlatform(20, 440, 200, 20);
+                createPlatform(325, 300, 200, 20);
+                createPlatform(630, 440, 200, 20);
+                createPlatform(945, 300, 200, 20);
+                createPlatform(1260, 440, 200, 20);
+                createDanger(0, 820, 1840, 20);
+                createGoal(1340, 420, 50, 20);
+            }
+            if (level_value == 2){
+                spawn_locationX = 1340;
+                spawn_locationY = 400;
+                player.x = spawn_locationX;
+                player.y = spawn_locationY;
+                createPlatform(20, 440, 200, 20);
+                createPlatform(630, 440, 200, 20);
+                createPlatform(1260, 440, 200, 20);
+                createDanger(0, 820, 1840, 20);
+                createDanger(830, 0, 20, 440);
+                createDanger(630, 460, 20, 400);
+                createGoal(100, 420, 50, 20)
+            }
+            if (level_value == 3){
+                spawn_locationX = 120;
+                spawn_locationY = 400;
+                player.x = spawn_locationX;
+                player.y = spawn_locationY;
+                createPlatform(20, 440, 200, 20);
+                createPlatform(500, 540, 200, 20);
+                createPlatform(1260, 100, 200, 20);
+                createPlatform(920, 800, 200, 20);
+                createDanger(0, 820, 1840, 20);
+                createDanger(500, 0, 20, 540);
+                createDanger(900, 200, 20, 1000);
+                createDanger(1100, 0, 20, 600);
+                createGoal(1340, 80, 50, 20);
+            }
+            if (level_value == 4){
+                spawn_locationX = 1340;
+                spawn_locationY = 70;
+                player.x = spawn_locationX;
+                player.y = spawn_locationY;
+                createPlatform(1260, 100, 200, 20);
+                createPlatform(1260, 800, 200, 20);
+                createPlatform(500, 800, 200, 20);
+                createDanger(0, 820, 1840, 20);
+                createDanger(950, 0, 20, 100);
+                createDanger(500, 200, 1500, 20);
+                createDanger(500, 200, 20, 400);
+                createDanger(900, 400, 20, 500);
+                createDanger(0, 400, 300, 20);
+                createGoal(1340, 780, 50, 20);
+            }
+            if (level_value == 5){
+                spawn_locationX = 1340;
+                spawn_locationY = 770;
+                player.x = spawn_locationX;
+                player.y = spawn_locationY;
+                createPlatform(1260, 800, 200, 20);
+                createPlatform(700, 800, 200, 20);
+                createPlatform(700, 380, 200, 20);
+                createPlatform(0, 380, 200, 20);
+                createDanger(0, 820, 1840, 20);
+                createDanger(1100, 300, 20, 1500);
+                createDanger(1100, 0, 20, 100);
+                createDanger(900, 0, 20, 500);
+                createDanger (900, 700, 20, 700);
+                createDanger(200, 400, 700, 20);
+                createDanger(400, 200, 20, 500);
+                createGoal(780, 360, 50, 20);
+
+            }
+            if (level_value == 6){
+                spawn_locationX = 1500;
+                spawn_locationY = 1500;
+                player.x = spawn_locationX;
+                player.y = spawn_locationY;
+                ctx.fillText("YOU WIN!", 440, 740);
+
+            }
+
+        }
+
+        function update(){
+
+            player.velocityX += player.accelerationX;
+            player.velocityY += player.accelerationY;
+            player.glideDuration -= 1;
+
+            if (player.velocityX > player.maxSpeed){
+                player.velocityX = player.maxSpeed;
+            }
+            else if (player.velocityX < -player.maxSpeed){
+                player.velocityX = -player.maxSpeed;
+            }
+
+            else if (player.isGliding){
+                player.accelerationY = -3;
+            }
+            else {
+                player.accelerationY = 1;
+            }
+
+            ctx.clearRect(0, 0, 1480, 840);
+            createCape();
+
+            let onPlatform = false;
+
+            for(var key in obstacleList){
+                ctx.fillStyle = "black";
+                ctx.fillRect(obstacleList[key].x, obstacleList[key].y, obstacleList[key].width, obstacleList[key].height);
+
+                if(isPlatformColliding(player, obstacleList[key])){
+                    console.log("The player is standing on the obstacle!");
+                    onPlatform = true;
+                    player.velocityY = 0;
+                    player.accelerationY = 0;
+                    player.glideDuration = 80;
+                    player.set_height = obstacleList[key].y - obstacleList[key].height + 2;
+                    player.y = obstacleList[key].y - player.size;
+                }
+            }
+            for(var key in avoidAreaList){
+                ctx.fillStyle = "red";
+                ctx.fillRect(avoidAreaList[key].x, avoidAreaList[key].y, avoidAreaList[key].width, avoidAreaList[key].height);
+                var didColliding = isColliding(player, avoidAreaList[key]);
+                if (didColliding) {
+                    player.x = spawn_locationX;
+                    player.y = spawn_locationY;
+                    player.velocityX = 0;
+                    player.velocityY = 0;
+                }
+            }
+            for(var key in goalList){
+                ctx.fillStyle = "cyan";
+                ctx.fillRect(goalList[key].x, goalList[key].y, goalList[key].width, goalList[key].height);
+                var didColliding = isColliding(player, goalList[key]);
+                if (didColliding) {
+                    level_value += 1;
+                    new_level();
+                    player.velocityX = 0;
+                    player.velocityY = 0;
+                }
+            }
+
+            if (!onPlatform && player.isGliding == false){
+                player.velocityY += gravity;
+            }
+
+            player.velocityX *= player.friction;
+            player.velocityY *= player.friction;
+
+            console.log(player.velocityY)
+
+            player.x += player.velocityX;
+            player.y += player.velocityY;
+
+            if (player.y < 0){
+                player.y = 0;
+            }
+            else if (player.x < 0){
+                player.x = 0;
+            }
+            else if (player.x > 1460){
+                player.x = 1460;
+            }
+
+            for(const cape of capeList){
+                if (player.glideDuration > 40){
+                ctx.fillStyle = "blue";
+                }
+                else if (player.glideDuration <= 40 && player.glideDuration >= 0) {
+                    ctx.fillStyle = "powderblue";
+                }
+                else {
+                    ctx.fillStyle = "darkgray";
+                }
+                ctx.fillRect(cape.x + 8, cape.y + 10, cape.size, cape.size);
+            }
+            ctx.fillStyle = "black";
+            ctx.fillRect(player.x, player.y, player.size, player.size);
+            console.log(player.velocityY);
+
+            if (level_value == 6){
+                ctx.fillStyle = "green";
+                ctx.fillText("YOU WIN!", 740, 400);
+
+            }
+        }
+
+    </script>
+</html>

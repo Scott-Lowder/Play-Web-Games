@@ -150,6 +150,9 @@
         { x: 0, y: 470, width: 50, height: 50, id: `RewardSlot 4`},
         { x: 0, y: 530, width: 50, height: 50, id: `RewardSlot 5`},
         { x: 0, y: 590, width: 50, height: 50, id: `RewardSlot 6`},
+        { x: 995, y: 305, width: 90, height: 90, id: `ClearButton`},
+        { x: 995, y: 470, width: 90, height: 90, id: `RerollButton`},
+        { x: 995, y: 635, width: 90, height: 90, id: `SubmitButton`},
         ];
 
         function displayRelicImgs(){
@@ -1016,6 +1019,27 @@
                       infoUpgradeColor = "black";
                       infoBox1 = rewardInventoryList[3];
                       infoBox2 = rewardDescription[rewardInventoryList[3]][0]
+                      hoveredRelic = true;
+                      break;
+                  }
+                  if (area.id == "ClearButton" && gameLoopState == "scrabble" && currentRound == 1){
+                      infoUpgradeColor = "#CC4444";
+                      infoBox1 = "Clear Button";
+                      infoBox2 = "Remove all used tiles back to the grid."
+                      hoveredRelic = true;
+                      break;
+                  }
+                  if (area.id == "RerollButton" && gameLoopState == "scrabble" && currentRound == 1){
+                      infoUpgradeColor = "#9966CC";
+                      infoBox1 = "Reroll Button";
+                      infoBox2 = "Replace all tiles on the grid with new ones."
+                      hoveredRelic = true;
+                      break;
+                  }
+                  if (area.id == "SubmitButton" && gameLoopState == "scrabble" && currentRound == 1){
+                      infoUpgradeColor = "#66CC66";
+                      infoBox1 = "Submit Button";
+                      infoBox2 = "Submit current word for scoring."
                       hoveredRelic = true;
                       break;
                   }

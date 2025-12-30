@@ -46,6 +46,8 @@
     <img id="sushi" src="Game Images/Sushi.bin" hidden>
     <img id="eyePatch" src="Game Images/Eyepatch.bin" hidden>
     <img id="cauldron" src="Game Images/Bowl.bin" hidden>
+    <img id="origami" src="Game Images/Origami.webp" hidden>
+    <img id="mushroom" src="Game Images/Mushroom.webp" hidden>
     <body>
     <canvas id="ctx" width="1480" height="830"></canvas>
     <script>
@@ -72,6 +74,8 @@
         const sushi = document.getElementById("sushi");
         const eyePatch = document.getElementById("eyePatch");
         const cauldron = document.getElementById("cauldron");
+        const origami = document.getElementById("origami");
+        const mushroom = document.getElementById("mushroom");
         const relicActiveAudio = document.getElementById("relicActiveAudio");
         const gameOverAudio = document.getElementById("gameOverAudio");
         canvas = document.getElementById("ctx");
@@ -183,11 +187,11 @@
         }
 
         function chooseRandomReward() {
-            const rewards = ["Cauldron", "Eye Patch", "Sushi", "Anchor", "Trophy", "Yoyo", "Scales", "2 of Hearts", "Thimble", "Prism", "Heart", "World", "Bullseye", "Glowing Egg", "D4", "Snake Charm",];
+            const rewards = ["Mushroom", "Origami", "Cauldron", "Eye Patch", "Sushi", "Anchor", "Trophy", "Yoyo", "Scales", "2 of Hearts", "Thimble", "Prism", "Heart", "World", "Bullseye", "Glowing Egg", "D4", "Snake Charm"];
             let random_Value;
 
             while (true) {
-                random_Value = Math.floor(Math.random() * 16);
+                random_Value = Math.floor(Math.random() * rewards.length);
                 const selectedReward = rewards[random_Value];
 
                 if (!rewardInventoryList.includes(selectedReward) && !relicOptionsList.includes(selectedReward)) {
@@ -247,6 +251,8 @@
           "Sushi": ["2X Word Score if word uses tiles from all 4 rows.", sushi, true],
           "Eye Patch": ["2X Word Score if no center tiles are used.", eyePatch, true],
           "Cauldron": ["Randomly upgrade a tile after scoring a word.", cauldron, false],
+          "Origami": ["Tiles in the corners of the grid have 2X points.", origami, false],
+          "Mushroom": ["Tiles that end the round permanently gain +2 points.", mushroom, false],
         }
 
         const allUpgradeDescript = {
@@ -468,6 +474,9 @@
               tilesOnGrid[i].pressed = false;
               tilesOnGrid[i].position = 0;
               rerollTileIndex ++;
+              if (rewardInventoryList.includes("Origami") && (i == 0 || i == 3 || i == 12 || i == 15)){
+              tilesOnGrid[i].value = tilesOnGrid[i].value * 2;
+              }
             }
           }
         }
@@ -483,6 +492,9 @@
             tilesOnGrid[i].pressed = false;
             tilesOnGrid[i].position = 0;
             rerollTileIndex ++;
+            if (rewardInventoryList.includes("Origami") && (i == 0 || i == 3 || i == 12 || i == 15)){
+              tilesOnGrid[i].value = tilesOnGrid[i].value * 2;
+            }
             wordDone.play()
           }
         }
@@ -1502,6 +1514,17 @@
               for (tile of currentTileBag){
                 if (tile.modifier == "Growth"){
                   tile.value += 2;
+                }
+              }
+              console.log(rewardInventoryList);
+              if (rewardInventoryList.includes("Mushroom")) {
+                for (value of currentInputLetters){
+                  for (tile of currentTileBag){
+                    if (tile.label == value){
+                      tile.value += 100;
+                      break;
+                    }
+                  }
                 }
               }
               if (currentRound % 2 == 0){

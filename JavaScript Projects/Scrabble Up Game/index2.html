@@ -48,6 +48,8 @@
     <img id="cauldron" src="Game Images/Bowl.bin" hidden>
     <img id="origami" src="Game Images/Origami.webp" hidden>
     <img id="mushroom" src="Game Images/Mushroom.webp" hidden>
+    <img id="lightning" src="Game Images/Blinding20Bolt.webp" hidden>
+    <img id="tentacle" src="Game Images/Tentacle.webp" hidden>
     <body>
     <canvas id="ctx" width="1480" height="830"></canvas>
     <script>
@@ -76,6 +78,8 @@
         const cauldron = document.getElementById("cauldron");
         const origami = document.getElementById("origami");
         const mushroom = document.getElementById("mushroom");
+        const lightning = document.getElementById("lightning");
+        const tentacle = document.getElementById("tentacle");
         const relicActiveAudio = document.getElementById("relicActiveAudio");
         const gameOverAudio = document.getElementById("gameOverAudio");
         canvas = document.getElementById("ctx");
@@ -187,7 +191,7 @@
         }
 
         function chooseRandomReward() {
-            const rewards = ["Mushroom", "Origami", "Cauldron", "Eye Patch", "Sushi", "Anchor", "Trophy", "Yoyo", "Scales", "2 of Hearts", "Thimble", "Prism", "Heart", "World", "Bullseye", "Glowing Egg", "D4", "Snake Charm"];
+            const rewards = ["Tentacle", "D4", "Lightning", "Snake Charm", "Mushroom", "Origami", "Cauldron", "Eye Patch", "Sushi", "Anchor", "Trophy", "Yoyo", "Scales", "2 of Hearts", "Thimble", "Prism", "Heart", "World", "Bullseye", "Glowing Egg", "D4"];
             let random_Value;
 
             while (true) {
@@ -235,14 +239,14 @@
         };
 
         let rewardDescription = {
-          "Snake Charm": ["When scoring a word, add an “S” if valid.", snakeCharmImg, false],
+          "Snake Charm": ["Adds an \"S\" to valid words. \"S\" tiles have +2 points.", snakeCharmImg, false],
           "Anchor": ["2X Word Score if word starts with a vowel.", anchorImg, false],
           "Glowing Egg": ["Double the bonus points of bonus tiles.", glowingEgg, false],
           "D4": ["Start with +4 extra rerolls each round.", d4, false],
           "Trophy": ["If only one play remains, 3X next Word Score.", trophy, false],
           "2 of Hearts": ["3X Word Score if the word has a double letter.", twoHearts, false],
           "Bullseye": ["Quadruple a random bonus tile’s points each round.", bullseye, false],
-          "Yoyo": ["3X Word Score if word starts & ends with same letter.", yoyo, false],
+          "Yoyo": ["3X Word Score if word starts & ends with the same letter.", yoyo, false],
           "World": ["Add +2 points to every W, O, R, L, and D tile.", world, false],
           "Heart": ["Add +2 points to every H, E, A, R, and T tile.", heart, false],
           "Scales": ["2X Word Score if the word is 6+ letters long.", scales, false],
@@ -252,7 +256,9 @@
           "Eye Patch": ["2X Word Score if no center tiles are used.", eyePatch, true],
           "Cauldron": ["Randomly upgrade a tile after scoring a word.", cauldron, false],
           "Origami": ["Tiles in the corners of the grid have 2X points.", origami, false],
-          "Mushroom": ["Tiles used to end round permanently gain +2 points.", mushroom, false],
+          "Mushroom": ["Tiles used to end the round permanently gain +2 points.", mushroom, false],
+          "Lightning": ["0.25X Word Score per reroll unused.", lightning, false],
+          "Tentacle": ["2X Word Score if word ends with a vowel.", tentacle, true],
         }
 
         const allUpgradeDescript = {
@@ -358,6 +364,13 @@
           if (rewardInventoryList.includes("Anchor") && vowels.includes(tempWord[0])){
             wordMultiplier += 1;
           }
+          if (rewardInventoryList.includes("Tentacle") && vowels.includes(tempWord[tempWord.length - 1])){
+            wordMultiplier += 1;
+          }
+
+          if (rewardInventoryList.includes("Lightning")){
+            wordMultiplier += 0.25 * rerollsRemaining;
+          }
 
           if (rewardInventoryList.includes("Trophy") && currentPlays == 1){
             wordMultiplier += 2;
@@ -371,15 +384,11 @@
             wordMultiplier += 1;
           }
 
-          if (rewardInventoryList.includes("2 of Hearts")){
-            for (let i = 0; i < lengthOfWord - 1; i++){
-              tempLetter = "$"
-              if (i != 0){
-                tempLetter = tempWord[i - 1];
-              }
-              if (tempLetter == tempWord[i]){
-                wordMultiplier += 2
-                break
+          if (rewardInventoryList.includes("2 of Hearts")) {
+            for (let i = 0; i < tempWord.length - 1; i++) {
+              if (tempWord[i] === tempWord[i + 1]) {
+                wordMultiplier += 2;
+                break;
               }
             }
           }
@@ -429,7 +438,7 @@
             }
           }
           numOfWordsScored += 1;
-          wordScore = wordScore * wordMultiplier;
+          wordScore = Math.round(wordScore * wordMultiplier);
           if (wordScore > (requiredScoreList[currentRound] / 2)){
             particlesOn = true
             setTimeout(() => particlesOn = false, 3500);
@@ -528,7 +537,7 @@
                     for (let i = 4; i < currentInputLetters.length; i++) {
                         if (inputGridBonus.includes(currentInputLetters[i])) {
                           currentInputLetters[i] = "S";
-                          currentInputValues[i] = 1;
+                          currentInputValues[i] = 3;
                           currentInputColors[i] = "#eee"; // Set default color for "S"
                           tempWord = tempTempWord;
                           sPlaced = true;
@@ -775,6 +784,14 @@
             }
           }
         }
+
+        function snakeReward(){
+          for (tile of currentTileBag){
+            if (tile.label == "S"){
+              tile.value += 2;
+            }
+          }
+        }
       
         fetch('words_alpha.txt')
           .then(res => {
@@ -933,6 +950,9 @@
                         if (relicOption1 == "Prism"){
                           prismUpgrade();
                         }
+                        if (relicOption1 == "Snake Charm"){
+                          snakeReward();
+                        }
                         refreshNewRound();
                       }
                     } 
@@ -961,6 +981,9 @@
                         if (relicOption2 == "Prism"){
                           prismUpgrade();
                         }
+                        if (relicOption2 == "Snake Charm"){
+                          snakeReward();
+                        }
                         refreshNewRound();
                       }
                     }                    
@@ -985,6 +1008,9 @@
                         }
                         if (relicOption3 == "Heart"){
                           heartReward();
+                        }
+                        if (relicOption3 == "Snake Charm"){
+                          snakeReward();
                         }
                         if (relicOption3 == "Prism"){
                           prismUpgrade();
@@ -1326,7 +1352,7 @@
             ctx.font = "Bold 32px Arial",
             ctx.drawImage(rewardDescription[relicOption1][1], canvas.width / 2 - 525, canvas.height * 0.5 - 175, 100, 100);
             ctx.fillText(`${relicOption1}`, canvas.width / 2 - 475, canvas.height * 0.5 - 25,);
-            ctx.font = "Bold 18px Arial",
+            ctx.font = "Bold 16px Arial",
             ctx.fillText(`${rewardDescription[relicOption1][0]}`, canvas.width / 2 - 475, canvas.height * 0.5 + 25,);
           }
 
@@ -1335,7 +1361,7 @@
             ctx.font = "Bold 32px Arial",
             ctx.drawImage(rewardDescription[relicOption2][1], canvas.width / 2 - 50, canvas.height * 0.5 - 175, 100, 100);
             ctx.fillText(`${relicOption2}`, canvas.width / 2, canvas.height * 0.5 - 25,);
-            ctx.font = "Bold 18px Arial",
+            ctx.font = "Bold 16px Arial",
             ctx.fillText(`${rewardDescription[relicOption2][0]}`, canvas.width / 2, canvas.height * 0.5 + 25,);
           }
 
@@ -1344,7 +1370,7 @@
             ctx.font = "Bold 32px Arial",
             ctx.drawImage(rewardDescription[relicOption3][1], canvas.width / 2 + 425, canvas.height * 0.5 - 175, 100, 100);
             ctx.fillText(`${relicOption3}`, canvas.width / 2 + 475, canvas.height * 0.5 - 25,);
-            ctx.font = "Bold 18px Arial",
+            ctx.font = "Bold 16px Arial",
             ctx.fillText(`${rewardDescription[relicOption3][0]}`, canvas.width / 2 + 475, canvas.height * 0.5 + 25,);
           }
 
@@ -1375,8 +1401,11 @@
               rewardDescription["Anchor"][2] = false;
             }
 
-
-            
+            if (rewardInventoryList.includes("Tentacle") && vowels.includes(lastLetter) && relicOnWord.length > 0){
+              rewardDescription["Tentacle"][2] = true;
+            } else {
+              rewardDescription["Tentacle"][2] = false;
+            }
 
             if (rewardInventoryList.includes("Trophy") && currentPlays == 1){
               rewardDescription["Trophy"][2] = true;
@@ -1521,7 +1550,7 @@
                 for (value of currentInputLetters){
                   for (tile of currentTileBag){
                     if (tile.label == value){
-                      tile.value += 100;
+                      tile.value += 2;
                       break;
                     }
                   }

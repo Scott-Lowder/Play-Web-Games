@@ -48,7 +48,7 @@
     <img id="cauldron" src="Game Images/Bowl.bin" hidden>
     <img id="origami" src="Game Images/Origami.webp" hidden>
     <img id="mushroom" src="Game Images/Mushroom.webp" hidden>
-    <img id="lightning" src="Game Images/Blinding20Bolt.webp" hidden>
+    <img id="obelisk" src="Game Images/Early20Grave.webp" hidden>
     <img id="tentacle" src="Game Images/Tentacle.webp" hidden>
     <body>
     <canvas id="ctx" width="1480" height="830"></canvas>
@@ -78,7 +78,7 @@
         const cauldron = document.getElementById("cauldron");
         const origami = document.getElementById("origami");
         const mushroom = document.getElementById("mushroom");
-        const lightning = document.getElementById("lightning");
+        const obelisk = document.getElementById("obelisk");
         const tentacle = document.getElementById("tentacle");
         const relicActiveAudio = document.getElementById("relicActiveAudio");
         const gameOverAudio = document.getElementById("gameOverAudio");
@@ -191,7 +191,7 @@
         }
 
         function chooseRandomReward() {
-            const rewards = ["Tentacle", "D4", "Lightning", "Snake Charm", "Mushroom", "Origami", "Cauldron", "Eye Patch", "Sushi", "Anchor", "Trophy", "Yoyo", "Scales", "2 of Hearts", "Thimble", "Prism", "Heart", "World", "Bullseye", "Glowing Egg", "D4"];
+            const rewards = ["Tentacle", "D4", "Obelisk", "Snake Charm", "Mushroom", "Origami", "Cauldron", "Eye Patch", "Sushi", "Anchor", "Trophy", "Yoyo", "Scales", "2 of Hearts", "Thimble", "Prism", "Heart", "World", "Bullseye", "Glowing Egg", "D4"];
             let random_Value;
 
             while (true) {
@@ -256,8 +256,8 @@
           "Eye Patch": ["2X Word Score if no center tiles are used.", eyePatch, true],
           "Cauldron": ["Randomly upgrade a tile after scoring a word.", cauldron, false],
           "Origami": ["Tiles in the corners of the grid have 2X points.", origami, false],
-          "Mushroom": ["Tiles used to end the round permanently gain +2 points.", mushroom, false],
-          "Lightning": ["0.25X Word Score per reroll unused.", lightning, false],
+          "Mushroom": ["Tiles used to end the round permanently gain +4 points.", mushroom, false],
+          "Obelisk": ["Add +2 points to Word Score per reroll unused.", obelisk, false],
           "Tentacle": ["2X Word Score if word ends with a vowel.", tentacle, true],
         }
 
@@ -368,10 +368,6 @@
             wordMultiplier += 1;
           }
 
-          if (rewardInventoryList.includes("Lightning")){
-            wordMultiplier += 0.25 * rerollsRemaining;
-          }
-
           if (rewardInventoryList.includes("Trophy") && currentPlays == 1){
             wordMultiplier += 2;
           }
@@ -436,6 +432,9 @@
                   currentInputValues[i] = Number(currentInputValues[i]) + 20 * glowingEggBonus * bullseyeList[5];
                 }
             }
+          }
+          if (rewardInventoryList.includes("Obelisk")){
+            wordScore += 2 * rerollsRemaining;
           }
           numOfWordsScored += 1;
           wordScore = Math.round(wordScore * wordMultiplier);
@@ -1550,7 +1549,7 @@
                 for (value of currentInputLetters){
                   for (tile of currentTileBag){
                     if (tile.label == value){
-                      tile.value += 2;
+                      tile.value += 4;
                       break;
                     }
                   }

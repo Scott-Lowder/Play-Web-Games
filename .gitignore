@@ -1,1 +1,12 @@
 .DS_Store
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Common ignores for game/dev projects
+*.log
+node_modules/
+build/
+dist/
+*.tmp
+Thumbs.db
